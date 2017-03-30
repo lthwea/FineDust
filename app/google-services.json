@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "414458475208",
+    "firebase_url": "https://finedust-64d15.firebaseio.com",
+    "project_id": "finedust-64d15",
+    "storage_bucket": "finedust-64d15.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:414458475208:android:6b3799770f96483f",
+        "android_client_info": {
+          "package_name": "com.lthwea.finedust"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "414458475208-spuat3rl0sljug2li5dksct09lcg5mph.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBASs0F40rRtRmMG-ByD39IizeFTUekbBk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
