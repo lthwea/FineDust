@@ -108,6 +108,8 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    //test
+
     @Override
     public void onMapReady(GoogleMap map) {
         LatLng SEOUL = new LatLng(37.56, 126.97);
