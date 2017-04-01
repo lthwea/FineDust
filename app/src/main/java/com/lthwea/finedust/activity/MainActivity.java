@@ -1,30 +1,33 @@
 package com.lthwea.finedust.activity;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
+import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.lthwea.finedust.R;
 
 
+
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback{
+
+    private GoogleMap mMap;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +35,8 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        Log.d("MainActivity", "onCreate: call");
 
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -56,6 +61,20 @@ public class MainActivity extends AppCompatActivity
         // firebase FCM
        /* FirebaseMessaging.getInstance().subscribeToTopic("news");
         FirebaseInstanceId.getInstance().getToken();*/
+
+
+
+        // Google Map Setting
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        if(mapFragment != null){
+            mapFragment.getMapAsync(this);
+        }else{
+            Toast.makeText(getApplicationContext(), "ERROR : mapFragment is null", Toast.LENGTH_SHORT).show();
+        }
+
+
+
+
 
 
     }
@@ -115,19 +134,43 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    //test
-
     @Override
-    public void onMapReady(GoogleMap map) {
-        LatLng SEOUL = new LatLng(37.56, 126.97);
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
 
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(SEOUL);
-        markerOptions.title("서울");
-        markerOptions.snippet("한국의 수도");
-        map.addMarker(markerOptions);
+        Log.d("MainActivity", "onMapReady: call");
 
-        map.moveCamera(CameraUpdateFactory.newLatLng(SEOUL));
-        map.animateCamera(CameraUpdateFactory.zoomTo(10));
+        // camera 좌쵸를 서울역 근처로 옮겨 봅니다.
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(
+                new LatLng(37.555744, 126.970431)   // 위도, 경도
+        ));
+
+        // 구글지도(지구) 에서의 zoom 레벨은 1~23 까지 가능합니다.
+        // 여러가지 zoom 레벨은 직접 테스트해보세요
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo(15);
+        mMap.animateCamera(zoom);   // moveCamera 는 바로 변경하지만,
+        // animateCamera() 는 근거리에선 부드럽게 변경합니다
+
+        // marker 표시
+        // market 의 위치, 타이틀, 짧은설명 추가 가능.
+        MarkerOptions marker = new MarkerOptions();
+        marker .position(new LatLng(37.555744, 126.970431))
+                .title("서울역")
+                .snippet("Seoul Station");
+        mMap.addMarker(marker).showInfoWindow(); // 마커추가,화면에출력
+
+        // 마커클릭 이벤트 처리
+        // GoogleMap 에 마커클릭 이벤트 설정 가능.
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                // 마커 클릭시 호출되는 콜백 메서드
+                Toast.makeText(getApplicationContext(),marker.getTitle() + " 클릭했음", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        });
+
     }
+
+
 }
