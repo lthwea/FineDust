@@ -5,4 +5,8 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+
+    <!-- 툴바 검색명 -->
+    <string name="toolbar_serarch">Search</string>
+
 </resources>
