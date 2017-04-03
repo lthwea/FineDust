@@ -4,6 +4,7 @@ import android.app.SearchManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -26,8 +27,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.lthwea.finedust.R;
+import com.lthwea.finedust.controller.DataController;
+import com.lthwea.finedust.vo.DefaultVO;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static com.lthwea.finedust.R.id.map;
@@ -40,6 +45,8 @@ public class MainActivity extends AppCompatActivity
     private GoogleMap mMap;
     private Geocoder geocoder;
     private Marker currentMarker;
+    private List defaultMarker;
+
 
 
     @Override
@@ -90,6 +97,10 @@ public class MainActivity extends AppCompatActivity
 
         //주소로 위도경도 구하기
         geocoder = new Geocoder(this);
+
+        //Network 사용 모드
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
 
     }
@@ -210,6 +221,10 @@ public class MainActivity extends AppCompatActivity
         // animateCamera() 는 근거리에선 부드럽게 변경합니다
 
 
+        DataController dc = new DataController();
+        dc.getDefaultData();
+        setDefaultMarker();
+
 
 
     }
@@ -222,7 +237,7 @@ public class MainActivity extends AppCompatActivity
         try {
             list = geocoder.getFromLocationName(
                     addr, // 지역 이름
-                    10); // 읽을 개수
+                    1); // 읽을 개수
         } catch (IOException e) {
             e.printStackTrace();
             Log.e("getLatLng","입출력 오류 - 서버에서 주소변환시 에러발생");
@@ -230,11 +245,13 @@ public class MainActivity extends AppCompatActivity
 
 
         for (int i = 0 ; i < list.size() ; i++){
-                Log.d("Address", list.get(i).toString());
+            Log.d("Address", list.get(i).toString());
         }
 
-        return list.get(0);
+
+        return list.size() > 0 ? list.get(0) : null;
     }
+
 
 
     public void setAddressMarker(Address addr){
@@ -326,6 +343,37 @@ public class MainActivity extends AppCompatActivity
     public void onCameraMoveCanceled() {
 
     }
+
+
+    public void setDefaultMarker(){
+
+        defaultMarker = new ArrayList();
+        MarkerOptions marker = new MarkerOptions();
+
+        if(DataController.JSON_DEFAULT_LIST != null){
+            for(int i = 0 ; i < DataController.JSON_DEFAULT_LIST.size() ; i++){
+                DefaultVO vo = (DefaultVO) DataController.JSON_DEFAULT_LIST.get(i);
+
+                marker.position(new LatLng(vo.getLat(), vo.getLng()))
+                        .title(vo.getCityName())
+                        .snippet(vo.getCityvalue());
+                Marker tmp = mMap.addMarker(marker);
+                tmp.showInfoWindow(); // 마커추가,화면에출력
+
+                defaultMarker.add(tmp); 
+            }
+        }else{
+            Log.e("setDefaultMarker", "DataController.JSON_DEFAULT_LIST NULL ERROR");
+        }
+
+
+
+    }
+
+
+
+
+
 
 
 }
