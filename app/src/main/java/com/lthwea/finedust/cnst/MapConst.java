@@ -37,9 +37,12 @@ public class MapConst {
         dataGubun 2
         dataTerm
         dataTime 2017-04-02
+
         gangwon 36
         gwangju 50
+
         gyeongbuk 29
+
         gyeonggi 53
         gyeongnam 37
         incheon 53
