@@ -58,7 +58,7 @@ import static com.lthwea.finedust.R.id.map;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
     //    OnMapReadyCallback, GoogleMap.OnMapClickListener, GoogleMap.OnCameraMoveStartedListener, GoogleMap.OnCameraMoveListener, GoogleMap.OnCameraIdleListener, GoogleMap.OnCameraMoveCanceledListener
-    ClusterManager.OnClusterClickListener<Person>, ClusterManager.OnClusterInfoWindowClickListener<Person>, ClusterManager.OnClusterItemClickListener<Person>, ClusterManager.OnClusterItemInfoWindowClickListener<Person>{
+    ClusterManager.OnClusterClickListener<MarkerVO>, ClusterManager.OnClusterInfoWindowClickListener<MarkerVO>, ClusterManager.OnClusterItemClickListener<MarkerVO>, ClusterManager.OnClusterItemInfoWindowClickListener<MarkerVO>{
     private GoogleMap mMap;
     private Geocoder geocoder;
     private Marker currentMarker;
@@ -221,11 +221,11 @@ public class MainActivity extends AppCompatActivity
         mMap = googleMap;
 
         // 구글맵 터치시 발생하는 리스너 등록
-        mMap.setOnMapClickListener(this);
+       /* mMap.setOnMapClickListener(this);
         mMap.setOnCameraMoveStartedListener(this);
         mMap.setOnCameraMoveListener(this);
         mMap.setOnCameraIdleListener(this);
-        mMap.setOnCameraMoveCanceledListener(this);
+        mMap.setOnCameraMoveCanceledListener(this);*/
 
         Log.d("MainActivity", "onMapReady: call");
 
@@ -498,6 +498,26 @@ public class MainActivity extends AppCompatActivity
         } else{
             return Color.BLACK;
         }
+
+    }
+
+    @Override
+    public boolean onClusterClick(Cluster<MarkerVO> cluster) {
+        return false;
+    }
+
+    @Override
+    public void onClusterInfoWindowClick(Cluster<MarkerVO> cluster) {
+
+    }
+
+    @Override
+    public boolean onClusterItemClick(MarkerVO markerVO) {
+        return false;
+    }
+
+    @Override
+    public void onClusterItemInfoWindowClick(MarkerVO markerVO) {
 
     }
 
