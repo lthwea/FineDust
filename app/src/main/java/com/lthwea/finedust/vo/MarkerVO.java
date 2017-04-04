@@ -1,5 +1,6 @@
 package com.lthwea.finedust.vo;
 
+
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
@@ -8,6 +9,9 @@ import com.google.maps.android.clustering.ClusterItem;
  */
 
 public class MarkerVO implements ClusterItem {
+
+
+    private LatLng mPosition;
 
     private String sidoName;
     private String cityName;
@@ -19,6 +23,20 @@ public class MarkerVO implements ClusterItem {
     private String no2Value;
     private String coValue;
     private String dataTime;
+
+    public MarkerVO(){
+
+    }
+
+
+    public MarkerVO(LatLng position, String cityName, String sidoName, String pm10Value) {
+        this.sidoName = sidoName;
+        this.cityName = cityName;
+        this.pm10Value = pm10Value;
+        mPosition = position;
+    }
+
+
 
     public String getSidoName() {
         return sidoName;
@@ -100,8 +118,13 @@ public class MarkerVO implements ClusterItem {
         this.dataTime = dataTime;
     }
 
+
     @Override
     public LatLng getPosition() {
-        return null;
+        return mPosition;
+    }
+
+    public void setPosition(LatLng position){
+        this.mPosition = position;
     }
 }

@@ -1,9 +1,8 @@
 package com.lthwea.finedust.activity;
 
 import android.app.SearchManager;
-import android.graphics.Bitmap;
+import android.content.Context;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
@@ -17,11 +16,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -29,36 +27,42 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
 import com.lthwea.finedust.R;
 import com.lthwea.finedust.controller.DataController;
-import com.lthwea.finedust.util.MultiDrawable;
-import com.lthwea.finedust.util.VOReader;
 import com.lthwea.finedust.vo.DefaultVO;
 import com.lthwea.finedust.vo.MarkerVO;
 
-import org.json.JSONException;
-
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static com.lthwea.finedust.R.id.map;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,
-    //    OnMapReadyCallback, GoogleMap.OnMapClickListener, GoogleMap.OnCameraMoveStartedListener, GoogleMap.OnCameraMoveListener, GoogleMap.OnCameraIdleListener, GoogleMap.OnCameraMoveCanceledListener
-    ClusterManager.OnClusterClickListener<MarkerVO>, ClusterManager.OnClusterInfoWindowClickListener<MarkerVO>, ClusterManager.OnClusterItemClickListener<MarkerVO>, ClusterManager.OnClusterItemInfoWindowClickListener<MarkerVO>{
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
+//        GoogleMap.OnMapClickListener,
+//        GoogleMap.OnCameraMoveStartedListener,
+//        GoogleMap.OnCameraMoveListener,
+//        GoogleMap.OnCameraIdleListener,
+//        GoogleMap.OnCameraMoveCanceledListener,
+        ClusterManager.OnClusterClickListener<MarkerVO>, ClusterManager.OnClusterInfoWindowClickListener<MarkerVO>, ClusterManager.OnClusterItemClickListener<MarkerVO>,
+        ClusterManager.OnClusterItemInfoWindowClickListener<MarkerVO> {
+
+
     private GoogleMap mMap;
     private Geocoder geocoder;
     private Marker currentMarker;
@@ -66,6 +70,7 @@ public class MainActivity extends AppCompatActivity
     private boolean isDefaultMarkerVisible;
 
     private ClusterManager<MarkerVO> mClusterManager;
+    private Random mRandom = new Random(1984);
 
 
 
@@ -89,8 +94,6 @@ public class MainActivity extends AppCompatActivity
                         .setAction("Action", null).show();
             }
         });*/
-
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -221,30 +224,50 @@ public class MainActivity extends AppCompatActivity
         mMap = googleMap;
 
         // 구글맵 터치시 발생하는 리스너 등록
-       /* mMap.setOnMapClickListener(this);
-        mMap.setOnCameraMoveStartedListener(this);
-        mMap.setOnCameraMoveListener(this);
-        mMap.setOnCameraIdleListener(this);
-        mMap.setOnCameraMoveCanceledListener(this);*/
+//        mMap.setOnMapClickListener(this);
+//        mMap.setOnCameraMoveStartedListener(this);
+//        mMap.setOnCameraMoveListener(this);
+//        mMap.setOnCameraMoveCanceledListener(this);
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(35.9077570,127.7669220), 6));
+
+        mClusterManager = new ClusterManager<MarkerVO>(this, mMap);
+        mClusterManager.setRenderer(new MarkerVORenderer());
+        //mMap.setOnCameraIdleListener(mClusterManager);
+        final CameraPosition[] mPreviousCameraPosition = {null};
+        googleMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
+                CameraPosition position = mMap.getCameraPosition();
+                if(mPreviousCameraPosition[0] == null || mPreviousCameraPosition[0].zoom != position.zoom) {
+                    mPreviousCameraPosition[0] = mMap.getCameraPosition();
+                    mClusterManager.cluster();
+                }
+            }
+        });
+
+        mMap.setOnMarkerClickListener(mClusterManager);
+        mMap.setOnInfoWindowClickListener(mClusterManager);
+        mClusterManager.setOnClusterClickListener(this);
+        mClusterManager.setOnClusterInfoWindowClickListener(this);
+        mClusterManager.setOnClusterItemClickListener(this);
+        mClusterManager.setOnClusterItemInfoWindowClickListener(this);
+
+        addItems();
+        mClusterManager.cluster();
 
         Log.d("MainActivity", "onMapReady: call");
 
-        // camera 좌쵸를 서울역 근처로 옮겨 봅니다.
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(
-                new LatLng(35.9077570,127.7669220)   // 위도, 경도
-        ));
 
         // 구글지도(지구) 에서의 zoom 레벨은 1~23 까지 가능합니다.
         // 여러가지 zoom 레벨은 직접 테스트해보세요
-        CameraUpdate zoom = CameraUpdateFactory.zoomTo(6);
-        mMap.animateCamera(zoom);   // moveCamera 는 바로 변경하지만,
+//        CameraUpdate zoom = CameraUpdateFactory.zoomTo(6);
+//        mMap.animateCamera(zoom);   // moveCamera 는 바로 변경하지만,
         // animateCamera() 는 근거리에선 부드럽게 변경합니다
 
 
-
-
-        DataController dc = new DataController();
-        String json = dc.getDefaultData();
+/*        DataController dc = new DataController();
+        String json = dc.getDefaultData();*/
 
 /*
 
@@ -259,7 +282,7 @@ public class MainActivity extends AppCompatActivity
 
 */
 
-        defaultMarkerList = new ArrayList();
+ //       defaultMarkerList = new ArrayList();
 
        /* try {
             dc.getDefaultData2();
@@ -273,7 +296,6 @@ public class MainActivity extends AppCompatActivity
 
 
     }
-
 
 
     public Address getAddress(String addr){
@@ -336,95 +358,96 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    @Override
-    public void onMapClick(LatLng latLng) {
-        Log.d("onMapClick", latLng.latitude + "," + latLng.longitude);
-    }
+//    @Override
+//    public void onMapClick(LatLng latLng) {
+//        Log.d("onMapClick", latLng.latitude + "," + latLng.longitude);
+//    }
 
+//
+//    @Override
+//    public void onCameraMoveStarted(int i) {
+//
+//        double currentZoom = mMap.getCameraPosition().zoom;
+//
+//        Log.d("onCameraMoveStarted", i + "\t" + currentZoom);
+//
+//
+//      /*  if( currentZoom <= 10 ){
+//
+//            if( isDefaultMarkerVisible == false && defaultMarkerList != null) {
+//                for (int j = 0; j < defaultMarkerList.size(); j++) {
+//                    Marker m = (Marker) defaultMarkerList.get(j);
+//                    m.setVisible(true);
+//                }
+//
+//                isDefaultMarkerVisible = true;
+//            }
+//
+//        }else if(currentZoom > 10 && currentZoom <= 12){
+//            Log.d("currentZoom", "open");
+//            if( isDefaultMarkerVisible == true && defaultMarkerList != null){
+//                for(int j = 0; j < defaultMarkerList.size() ; j++){
+//                    Marker m = (Marker) defaultMarkerList.get(j);
+//                    m.setVisible(false);
+//                }
+//
+//                isDefaultMarkerVisible = false;
+//            }
+//        }*/
+//
+//
+//
+//        /*
+//        *   6~7.5           //전체
+//        *   7.5~10          //시
+//        *   10~12           //구
+//        *   12~15           //동
+//        *
+//        * */
+//
+//      /*  switch (i) {
+//            case GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE:
+//
+//                break;
+//            case GoogleMap.OnCameraMoveStartedListener.REASON_API_ANIMATION:
+//
+//                break;
+//            case GoogleMap.OnCameraMoveStartedListener.REASON_DEVELOPER_ANIMATION:
+//
+//                break;
+//        }
+//
+//        */
+///*
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-33.8696, 151.2094), 10));
+//
+//        IconGenerator iconFactory = new IconGenerator(this);
+//        addIcon(iconFactory, "Default", new LatLng(-33.8696, 151.2094));
+//
+//        iconFactory.setColor(Color.CYAN);
+//        addIcon(iconFactory, "Custom color", new LatLng(-33.9360, 151.2070));
+//
+//        iconFactory.setRotation(90);
+//        iconFactory.setStyle(IconGenerator.STYLE_RED);
+//        addIcon(iconFactory, "Rotated 90 degrees", new LatLng(-33.8858, 151.096));
+//
+//        iconFactory.setContentRotation(-90);
+//        iconFactory.setStyle(IconGenerator.STYLE_PURPLE);
+//        addIcon(iconFactory, "Rotate=90, ContentRotate=-90", new LatLng(-33.9992, 151.098));
+//
+//        iconFactory.setRotation(0);
+//        iconFactory.setContentRotation(90);
+//        iconFactory.setStyle(IconGenerator.STYLE_GREEN);
+//        addIcon(iconFactory, "ContentRotate=90", new LatLng(-33.7677, 151.244));
+//
+//     iconFactory.setRotation(0);
+//        iconFactory.setContentRotation(0);
+//        iconFactory.setStyle(IconGenerator.STYLE_ORANGE);
+//        addIcon(iconFactory, makeCharSequence(), new LatLng(-33.77720, 151.12412));*/
+//
+//    }
 
-    @Override
-    public void onCameraMoveStarted(int i) {
-
-        double currentZoom = mMap.getCameraPosition().zoom;
-
-        Log.d("onCameraMoveStarted", i + "\t" + currentZoom);
-
-
-      /*  if( currentZoom <= 10 ){
-
-            if( isDefaultMarkerVisible == false && defaultMarkerList != null) {
-                for (int j = 0; j < defaultMarkerList.size(); j++) {
-                    Marker m = (Marker) defaultMarkerList.get(j);
-                    m.setVisible(true);
-                }
-
-                isDefaultMarkerVisible = true;
-            }
-
-        }else if(currentZoom > 10 && currentZoom <= 12){
-            Log.d("currentZoom", "open");
-            if( isDefaultMarkerVisible == true && defaultMarkerList != null){
-                for(int j = 0; j < defaultMarkerList.size() ; j++){
-                    Marker m = (Marker) defaultMarkerList.get(j);
-                    m.setVisible(false);
-                }
-
-                isDefaultMarkerVisible = false;
-            }
-        }*/
-
-
-
-        /*
-        *   6~7.5           //전체
-        *   7.5~10          //시
-        *   10~12           //구
-        *   12~15           //동
-        *
-        * */
-
-      /*  switch (i) {
-            case GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE:
-
-                break;
-            case GoogleMap.OnCameraMoveStartedListener.REASON_API_ANIMATION:
-
-                break;
-            case GoogleMap.OnCameraMoveStartedListener.REASON_DEVELOPER_ANIMATION:
-
-                break;
-        }
-
-        */
 /*
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-33.8696, 151.2094), 10));
-
-        IconGenerator iconFactory = new IconGenerator(this);
-        addIcon(iconFactory, "Default", new LatLng(-33.8696, 151.2094));
-
-        iconFactory.setColor(Color.CYAN);
-        addIcon(iconFactory, "Custom color", new LatLng(-33.9360, 151.2070));
-
-        iconFactory.setRotation(90);
-        iconFactory.setStyle(IconGenerator.STYLE_RED);
-        addIcon(iconFactory, "Rotated 90 degrees", new LatLng(-33.8858, 151.096));
-
-        iconFactory.setContentRotation(-90);
-        iconFactory.setStyle(IconGenerator.STYLE_PURPLE);
-        addIcon(iconFactory, "Rotate=90, ContentRotate=-90", new LatLng(-33.9992, 151.098));
-
-        iconFactory.setRotation(0);
-        iconFactory.setContentRotation(90);
-        iconFactory.setStyle(IconGenerator.STYLE_GREEN);
-        addIcon(iconFactory, "ContentRotate=90", new LatLng(-33.7677, 151.244));
-
-     iconFactory.setRotation(0);
-        iconFactory.setContentRotation(0);
-        iconFactory.setStyle(IconGenerator.STYLE_ORANGE);
-        addIcon(iconFactory, makeCharSequence(), new LatLng(-33.77720, 151.12412));*/
-
-    }
-
     @Override
     public void onCameraMove() {
         Log.d("onCameraMove", "onCameraMove");
@@ -439,11 +462,11 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-
     @Override
     public void onCameraMoveCanceled() {
         Log.d("onCameraMoveCanceled", "cancle");
     }
+*/
 
 
     public void setDefaultMarker(){
@@ -471,8 +494,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-
-
     private void addIcon(IconGenerator iconFactory, String text, LatLng position) {
         MarkerOptions markerOptions = new MarkerOptions().
                 icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(text))).
@@ -482,8 +503,6 @@ public class MainActivity extends AppCompatActivity
         Marker tmp = mMap.addMarker(markerOptions);
 
         defaultMarkerList.add(tmp);
-
-
     }
 
     public int getMarkerColor(int val){
@@ -503,123 +522,27 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onClusterClick(Cluster<MarkerVO> cluster) {
-        return false;
-    }
+        Log.d("onClusterClick", cluster.getSize()+"");
 
-    @Override
-    public void onClusterInfoWindowClick(Cluster<MarkerVO> cluster) {
-
-    }
-
-    @Override
-    public boolean onClusterItemClick(MarkerVO markerVO) {
-        return false;
-    }
-
-    @Override
-    public void onClusterItemInfoWindowClick(MarkerVO markerVO) {
-
-    }
-
-    /*
-    private CharSequence makeCharSequence() {
-        String prefix = "Mixing ";
-        String suffix = "different fonts";
-        String sequence = prefix + suffix;
-        SpannableStringBuilder ssb = new SpannableStringBuilder(sequence);
-        ssb.setSpan(new StyleSpan(ITALIC), 0, prefix.length(), SPAN_EXCLUSIVE_EXCLUSIVE);
-        ssb.setSpan(new StyleSpan(BOLD), prefix.length(), sequence.length(), SPAN_EXCLUSIVE_EXCLUSIVE);
-        return ssb;
-    }*/
-
-
-
-
-    /**
-     * Draws profile photos inside markers (using IconGenerator).
-     * When there are multiple people in the cluster, draw multiple photos (using MultiDrawable).
-     */
-    private class MarkerRenderer extends DefaultClusterRenderer<MarkerVO> {
-        private final IconGenerator mIconGenerator = new IconGenerator(getApplicationContext());
-        private final IconGenerator mClusterIconGenerator = new IconGenerator(getApplicationContext());
-        private final ImageView mImageView;
-        private final ImageView mClusterImageView;
-        private final int mDimension = 0;
-
-        public MarkerRenderer() {
-            super(getApplicationContext(), mMap, mClusterManager);
-
-            View multiProfile = getLayoutInflater().inflate(R.layout.nav_header_main, null);
-            mClusterIconGenerator.setContentView(multiProfile);
-            mClusterImageView = (ImageView) multiProfile.findViewById(R.id.image);
-
-            mImageView = new ImageView(getApplicationContext());
-        /*    mDimension = (int) getResources().getDimension(R.dimen.custom_profile_image);
-            mImageView.setLayoutParams(new ViewGroup.LayoutParams(mDimension, mDimension));
-            int padding = (int) getResources().getDimension(R.dimen.custom_profile_padding);
-            mImageView.setPadding(padding, padding, padding, padding);*/
-            mIconGenerator.setContentView(mImageView);
-        }
-
-        @Override
-        protected void onBeforeClusterItemRendered(MarkerVO vo, MarkerOptions markerOptions) {
-            // Draw a single person.
-            // Set the info window to show their name.
-            mImageView.setImageResource(R.drawable.ic_menu_camera);
-            Bitmap icon = mIconGenerator.makeIcon();
-            markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(vo.getCityName());
-        }
-
-        @Override
-        protected void onBeforeClusterRendered(Cluster<MarkerVO> cluster, MarkerOptions markerOptions) {
-            // Draw multiple people.
-            // Note: this method runs on the UI thread. Don't spend too much time in here (like in this example).
-            List<Drawable> profilePhotos = new ArrayList<Drawable>(Math.min(4, cluster.getSize()));
-            int width = mDimension;
-            int height = mDimension;
-
-            for (MarkerVO p : cluster.getItems()) {
-                // Draw 4 at most.
-                if (profilePhotos.size() == 4) break;
-                Drawable drawable = getResources().getDrawable(R.mipmap.ic_launcher);
-                drawable.setBounds(0, 0, width, height);
-                profilePhotos.add(drawable);
-            }
-            MultiDrawable multiDrawable = new MultiDrawable(profilePhotos);
-            multiDrawable.setBounds(0, 0, width, height);
-
-            mClusterImageView.setImageDrawable(multiDrawable);
-            Bitmap icon = mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
-            markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
-        }
-
-        @Override
-        protected boolean shouldRenderAsCluster(Cluster cluster) {
-            // Always render clusters.
-            return cluster.getSize() > 1;
-        }
-    }
-
-    @Override
-    public boolean onClusterClick(Cluster<Person> cluster) {
         // Show a toast with some info when the cluster is clicked.
-        String firstName = cluster.getItems().iterator().next().name;
+        String firstName = cluster.getItems().iterator().next().getCityName();
         Toast.makeText(this, cluster.getSize() + " (including " + firstName + ")", Toast.LENGTH_SHORT).show();
 
-        // Zoom in the cluster. Need to create LatLngBounds and including all the cluster items
-        // inside of bounds, then animate to center of the bounds.
+            // Zoom in the cluster. Need to create LatLngBounds and including all the cluster items
+            // inside of bounds, then animate to center of the bounds.
 
         // Create the builder to collect all essential cluster items for the bounds.
         LatLngBounds.Builder builder = LatLngBounds.builder();
         for (ClusterItem item : cluster.getItems()) {
-            builder.include(item.getPosition());
+                builder.include(item.getPosition());
         }
         // Get the LatLngBounds
         final LatLngBounds bounds = builder.build();
-
         // Animate camera to the bounds
         try {
-            getMap().animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+            //mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(cluster.getPosition(), (float) Math.floor(mMap.getCameraPosition().zoom + 1)), 300,null);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -627,68 +550,54 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+
     @Override
-    public void onClusterInfoWindowClick(Cluster<Person> cluster) {
+    public void onClusterInfoWindowClick(Cluster<MarkerVO> cluster) {
         // Does nothing, but you could go to a list of the users.
     }
 
     @Override
-    public boolean onClusterItemClick(Person item) {
+    public boolean onClusterItemClick(MarkerVO item) {
         // Does nothing, but you could go into the user's profile page, for example.
         return false;
     }
 
     @Override
-    public void onClusterItemInfoWindowClick(Person item) {
+    public void onClusterItemInfoWindowClick(MarkerVO item) {
         // Does nothing, but you could go into the user's profile page, for example.
     }
 
-    @Override
-    protected void startDemo() {
-        getMap().moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(51.503186, -0.126446), 9.5f));
-
-        mClusterManager = new ClusterManager<Person>(this, getMap());
-        mClusterManager.setRenderer(new PersonRenderer());
-        getMap().setOnCameraIdleListener(mClusterManager);
-        getMap().setOnMarkerClickListener(mClusterManager);
-        getMap().setOnInfoWindowClickListener(mClusterManager);
-        mClusterManager.setOnClusterClickListener(this);
-        mClusterManager.setOnClusterInfoWindowClickListener(this);
-        mClusterManager.setOnClusterItemClickListener(this);
-        mClusterManager.setOnClusterItemInfoWindowClickListener(this);
-
-        addItems();
-        mClusterManager.cluster();
-    }
-
     private void addItems() {
-        // http://www.flickr.com/photos/sdasmarchives/5036248203/
-        mClusterManager.addItem(new Person(position(), "Walter", R.drawable.walter));
+        DataController dc = new DataController();
+        String json = dc.getDefaultData();
 
-        // http://www.flickr.com/photos/usnationalarchives/4726917149/
-        mClusterManager.addItem(new Person(position(), "Gran", R.drawable.gran));
+        if(DataController.JSON_DEFAULT_LIST != null){
+            for(int i = 0 ; i < DataController.JSON_DEFAULT_LIST.size() ; i++){
+                MarkerVO vo = (MarkerVO) DataController.JSON_DEFAULT_LIST.get(i);
+                mClusterManager.addItem(vo);
+            }
 
-        // http://www.flickr.com/photos/nypl/3111525394/
-        mClusterManager.addItem(new Person(position(), "Ruth", R.drawable.ruth));
+        }else{
+            Log.e("setDefaultMarker", "DataController.JSON_DEFAULT_LIST NULL ERROR");
+        }
 
-        // http://www.flickr.com/photos/smithsonian/2887433330/
-        mClusterManager.addItem(new Person(position(), "Stefan", R.drawable.stefan));
 
-        // http://www.flickr.com/photos/library_of_congress/2179915182/
-        mClusterManager.addItem(new Person(position(), "Mechanic", R.drawable.mechanic));
+        mClusterManager.addItem(new MarkerVO(new LatLng(37.5665350,126.9779690), "서울1", "1", "10"));
+        mClusterManager.addItem(new MarkerVO(new LatLng(37.6665350,126.9779690), "서울2", "1", "10"));
+        mClusterManager.addItem(new MarkerVO(new LatLng(37.6665350,126.9879690), "서울2", "1", "10"));
+        mClusterManager.addItem(new MarkerVO(new LatLng(37.6665350,126.9679690), "서울2", "1", "10"));
+        mClusterManager.addItem(new MarkerVO(new LatLng(37.6765350,126.9779690), "서울2", "1", "10"));
+ /*       mClusterManager.addItem(new MarkerVO(new LatLng(35.8714350,128.6014450), "서울1", "2", "10"));
+        mClusterManager.addItem(new MarkerVO(new LatLng(35.1595450,126.8526010), "서울1", "3", "10"));
+        mClusterManager.addItem(new MarkerVO(new LatLng(33.4890110,126.4983020), "서울1", "4", "10"));
+        mClusterManager.addItem(new MarkerVO(new LatLng(37.8699840,127.7433860), "서울1", "5", "10"));
+        mClusterManager.addItem(new MarkerVO(new LatLng(37.4138000,127.5183000), "경기", "5", "10"));
+        mClusterManager.addItem(new MarkerVO(new LatLng(37.2635730,127.0286010), "수원", "5", "10"));
+*/
 
-        // http://www.flickr.com/photos/nationalmediamuseum/7893552556/
-        mClusterManager.addItem(new Person(position(), "Yeats", R.drawable.yeats));
-
-        // http://www.flickr.com/photos/sdasmarchives/5036231225/
-        mClusterManager.addItem(new Person(position(), "John", R.drawable.john));
-
-        // http://www.flickr.com/photos/anmm_thecommons/7694202096/
-        mClusterManager.addItem(new Person(position(), "Trevor the Turtle", R.drawable.turtle));
-
-        // http://www.flickr.com/photos/usnationalarchives/4726892651/
-        mClusterManager.addItem(new Person(position(), "Teach", R.drawable.teacher));
     }
+
+/*
 
     private LatLng position() {
         return new LatLng(random(51.6723432, 51.38494009999999), random(0.148271, -0.3514683));
@@ -697,8 +606,107 @@ public class MainActivity extends AppCompatActivity
     private double random(double min, double max) {
         return mRandom.nextDouble() * (max - min) + min;
     }
+*/
 
 
+
+
+    /**
+     * Draws profile photos inside markers (using IconGenerator).
+     * When there are multiple people in the cluster, draw multiple photos (using MultiDrawable).
+     */
+    private class MarkerVORenderer extends DefaultClusterRenderer<MarkerVO> {
+
+        private final IconGenerator mIconGenerator = new IconGenerator(getApplicationContext());
+        private final IconGenerator mClusterIconGenerator = new IconGenerator(getApplicationContext());
+
+        /*private final ImageView mImageView;
+        private final ImageView mClusterImageView;*/
+
+  /*      private final TextView mTextView;
+        private final TextView mClusterTextView;
+*/
+
+        public MarkerVORenderer() {
+            super(getApplicationContext(), mMap, mClusterManager);
+/*
+            View multiProfile = getLayoutInflater().inflate(R.layout.multi_profile, null);
+            mClusterIconGenerator.setContentView(multiProfile);
+            mClusterTextView = (TextView) multiProfile.findViewById(R.id.tv_map_marker);
+            mTextView = new TextView(getApplicationContext());
+            mIconGenerator.setContentView(mTextView);
+            */
+         /*    mClusterImageView = (ImageView) multiProfile.findViewById(R.id.image);
+            mImageView = new ImageView(getApplicationContext());
+           mDimension = (int) getResources().getDimension(R.dimen.custom_profile_image);
+            mImageView.setLayoutParams(new ViewGroup.LayoutParams(mDimension, mDimension));
+            int padding = (int) getResources().getDimension(R.dimen.custom_profile_padding);
+            mImageView.setPadding(padding, padding, padding, padding);*/
+
+        }
+
+        @Override
+        protected void onBeforeClusterItemRendered(MarkerVO vo, MarkerOptions markerOptions) {
+            Log.d("asadsadsad", vo.getCityName());
+            // Draw a single person.
+            // Set the info window to show their name.
+            //mImageView.setImageResource(R.drawable.ic_menu_camera);
+            //Bitmap icon = mIconGenerator.makeIcon();
+            //markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(vo.getCityName());
+            String str = vo.getCityName() + " " + vo.getSidoName() + " " + vo.getPm10Value();
+            //mTextView.setText(str);
+            mIconGenerator.setColor(Color.YELLOW);
+            markerOptions.icon(BitmapDescriptorFactory.fromBitmap(mIconGenerator.makeIcon(str)))
+                    .anchor(mIconGenerator.getAnchorU(), mIconGenerator.getAnchorV());
+            super.onBeforeClusterItemRendered(vo, markerOptions);
+
+        }
+
+
+
+       @Override
+        protected void onBeforeClusterRendered(Cluster<MarkerVO> cluster, MarkerOptions markerOptions) {
+
+
+            Log.d("onBeforeClusterRendered", cluster.getSize() + "");
+
+           // Draw multiple people.
+           // Note: this method runs on the UI thread. Don't spend too much time in here (like in this example).
+
+           //Drawable marker;
+           int ClusterSize = cluster.getSize();
+
+           //marker = getApplication().getResources().getDrawable(R.drawable.ic_menu_camera);
+           mClusterIconGenerator.setColor(Color.GREEN);
+
+           LayoutInflater myInflater = (LayoutInflater)getApplication().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+           View activityView = myInflater.inflate(R.layout.multi_profile, null, false);
+
+           mClusterIconGenerator.setContentView(activityView);
+           mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
+
+           BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(mClusterIconGenerator.makeIcon());
+           markerOptions.icon(icon);
+
+
+        }
+
+
+
+        @Override
+        protected boolean shouldRenderAsCluster(Cluster cluster) {
+            Log.d("shouldRenderAsCluster", cluster.getSize()+"");
+
+            // Always render clusters.
+            //return cluster.getSize() > 5;
+            return cluster.getSize() > 5;
+
+        }
+
+
+
+
+    }
 
 }
 
