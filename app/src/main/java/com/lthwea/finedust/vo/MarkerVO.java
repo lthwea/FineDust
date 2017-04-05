@@ -29,11 +29,11 @@ public class MarkerVO implements ClusterItem {
     }
 
 
-    public MarkerVO(LatLng position, String cityName, String sidoName, String pm10Value) {
-        this.sidoName = sidoName;
-        this.cityName = cityName;
-        this.pm10Value = pm10Value;
-        mPosition = position;
+    public MarkerVO(LatLng position, String sidoName, String cityName, String pm10Value) {
+            this.sidoName = sidoName;
+            this.cityName = cityName;
+            this.pm10Value = pm10Value;
+            mPosition = position;
     }
 
 

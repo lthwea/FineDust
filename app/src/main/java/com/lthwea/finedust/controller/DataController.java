@@ -10,13 +10,17 @@ import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.Socket;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by LeeTaeHun on 2017. 3. 30..
@@ -24,8 +28,9 @@ import java.util.List;
 
 public class DataController {
 
-    HttpURLConnection urlConnection;
+
     public static List JSON_DEFAULT_LIST;
+/*
 
     public String getDefaultData() {
 
@@ -139,13 +144,15 @@ public class DataController {
             }
 
 
-           /* Iterator<?> keys = jo.keys();
+           */
+/* Iterator<?> keys = jo.keys();
             while( keys.hasNext() ) {
                 String key = (String)keys.next();
                 String value = (String) jo.get(key);
                 JSON_DEFAULT_MAP.put(key, value);
                 Log.d("JSON_DEFAULT_MAP", key + "\t" + value);
-            }*/
+            }*//*
+
 
 
         }catch( Exception e) {
@@ -160,50 +167,46 @@ public class DataController {
         return jo.toString();
 
     }
+*/
 
+    public void getData() {
 
-    public void getSeoulData() {
-
-        StringBuilder result = new StringBuilder();
+        HttpURLConnection urlConnection = null;
 
         try {
-            URL url = new URL("http://dopewealth.com/finedust?key=1234&value=sido");
+            URL url = new URL("http://dopewealth.com/finedust?key=1234");
             urlConnection = (HttpURLConnection) url.openConnection();
-            InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+            urlConnection.connect();
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-
+            BufferedReader br = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+            StringBuilder sb = new StringBuilder();
             String line;
-            while ((line = reader.readLine()) != null) {
-                result.append(line);
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
             }
-
-            Log.d("getSeoulData", result.toString());
-
-            JSONObject jsonObject = new JSONObject(result.toString());
-            JSONArray jArray = (JSONArray) jsonObject.get("list");
-            JSONObject jo = (JSONObject) jArray.get(0);
-
-            Log.d("jsonObject", jsonObject.get("list")+",");
+            br.close();
 
             JSON_DEFAULT_LIST = new ArrayList();
-            Iterator<?> keys = jo.keys();
-            while( keys.hasNext() ) {
-                String key = (String)keys.next();
-                String value = (String) jo.get(key);
-                Log.d("JSON_SEOUL_MAP", key + "\t" + value);
+            JSONArray jar = new JSONArray(sb.toString());
 
+
+            for(int i = 0 ; i < jar.length() ; i++){
+                JSONArray jsonArray = (JSONArray) jar.get(i);
+
+                for(int j = 0 ; j < jsonArray.length() ; j++){
+
+                    JSONObject tmp = (JSONObject) jsonArray.get(j);
+                    MarkerVO vo = new MarkerVO();
+                    vo.setCityName((String) tmp.get("cityName"));
+                    vo.setDataTime((String) tmp.get("dataTime"));
+                    vo.setSidoName((String) tmp.get("sidoName"));
+                    vo.setPm10Value((String) tmp.get("pm10Value"));
+                    vo.setPosition(position());
+                    Log.d("JSON_DEFAULT_LIST", vo.getSidoName() + "\t" + vo.getCityName() + "\t" + vo.getPm10Value() + "\t" + vo.getDataTime());
+
+                    JSON_DEFAULT_LIST.add(vo);
+                }
             }
-
-
-           /* Iterator<?> keys = jo.keys();
-            while( keys.hasNext() ) {
-                String key = (String)keys.next();
-                String value = (String) jo.get(key);
-                JSON_DEFAULT_MAP.put(key, value);
-                Log.d("JSON_DEFAULT_MAP", key + "\t" + value);
-            }*/
-
 
         }catch( Exception e) {
             e.printStackTrace();
@@ -216,6 +219,14 @@ public class DataController {
 
     }
 
+    private LatLng position() {
+        return new LatLng(random(36.4789102, 127.7250393), random(0.148271, 0.3514683));
+    }
+
+    private Random mRandom = new Random(1984);
+    private double random(double min, double max) {
+        return mRandom.nextDouble() * (max - min) + min;
+    }
 
 
 /*

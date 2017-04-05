@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity
     private boolean isDefaultMarkerVisible;
 
     private ClusterManager<MarkerVO> mClusterManager;
-    private Random mRandom = new Random(1984);
 
 
 
@@ -569,25 +568,26 @@ public class MainActivity extends AppCompatActivity
 
     private void addItems() {
         DataController dc = new DataController();
-        String json = dc.getDefaultData();
+        dc.getData();
 
         if(DataController.JSON_DEFAULT_LIST != null){
             for(int i = 0 ; i < DataController.JSON_DEFAULT_LIST.size() ; i++){
                 MarkerVO vo = (MarkerVO) DataController.JSON_DEFAULT_LIST.get(i);
                 mClusterManager.addItem(vo);
+
             }
 
         }else{
             Log.e("setDefaultMarker", "DataController.JSON_DEFAULT_LIST NULL ERROR");
         }
 
-
+ /*
         mClusterManager.addItem(new MarkerVO(new LatLng(37.5665350,126.9779690), "서울1", "1", "10"));
         mClusterManager.addItem(new MarkerVO(new LatLng(37.6665350,126.9779690), "서울2", "1", "10"));
         mClusterManager.addItem(new MarkerVO(new LatLng(37.6665350,126.9879690), "서울2", "1", "10"));
         mClusterManager.addItem(new MarkerVO(new LatLng(37.6665350,126.9679690), "서울2", "1", "10"));
         mClusterManager.addItem(new MarkerVO(new LatLng(37.6765350,126.9779690), "서울2", "1", "10"));
- /*       mClusterManager.addItem(new MarkerVO(new LatLng(35.8714350,128.6014450), "서울1", "2", "10"));
+      mClusterManager.addItem(new MarkerVO(new LatLng(35.8714350,128.6014450), "서울1", "2", "10"));
         mClusterManager.addItem(new MarkerVO(new LatLng(35.1595450,126.8526010), "서울1", "3", "10"));
         mClusterManager.addItem(new MarkerVO(new LatLng(33.4890110,126.4983020), "서울1", "4", "10"));
         mClusterManager.addItem(new MarkerVO(new LatLng(37.8699840,127.7433860), "서울1", "5", "10"));
