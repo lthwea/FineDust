@@ -1,7 +1,7 @@
 package com.lthwea.finedust.activity;
 
 import android.app.SearchManager;
-import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -16,10 +16,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -27,7 +25,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -40,14 +37,13 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
 import com.lthwea.finedust.R;
+import com.lthwea.finedust.cnst.MapConst;
 import com.lthwea.finedust.controller.DataController;
-import com.lthwea.finedust.vo.DefaultVO;
 import com.lthwea.finedust.vo.MarkerVO;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 
 import static com.lthwea.finedust.R.id.map;
 
@@ -65,9 +61,7 @@ public class MainActivity extends AppCompatActivity
 
     private GoogleMap mMap;
     private Geocoder geocoder;
-    private Marker currentMarker;
     private List defaultMarkerList;
-    private boolean isDefaultMarkerVisible;
 
     private ClusterManager<MarkerVO> mClusterManager;
 
@@ -120,6 +114,29 @@ public class MainActivity extends AppCompatActivity
         //주소로 위도경도 구하기
         geocoder = new Geocoder(this);
 
+
+
+       /* for(int i = 0; i < MapConst.testList.size() ; i++){
+
+            String tmp = (String) MapConst.testList.get(i);
+            Address adr = getAddress(tmp);
+            String[] tmp2 = tmp.split(" ");
+            Log.d("getLatLng",  "put(\""+ tmp2[0] + tmp2[1] + "\"," + "new MarkerVO(\"" + tmp2[0] + "\",\"" + tmp2[1] + "\",new LatLng(  " + adr.getLatitude() + "," + adr.getLongitude() + ")) );" );
+
+        }*/
+
+
+
+
+
+
+
+
+
+
+
+
+
         //Network 사용 모드
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
@@ -147,14 +164,11 @@ public class MainActivity extends AppCompatActivity
         final SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_settings));
         SearchManager searchManager = (SearchManager) getSystemService(SEARCH_SERVICE);
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-
+        searchView.setQueryHint("시,군,구,동 검색...");
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
 
             @Override
             public boolean onQueryTextSubmit(String s) {
-                if(currentMarker != null){
-                    currentMarker.remove();                     //재검색시 현재 마커 지움
-                }
 
                 Address addr = getAddress(s);
                 if(addr != null){
@@ -220,6 +234,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        Log.d("MainActivity", "onMapReady: call");
+
         mMap = googleMap;
 
         // 구글맵 터치시 발생하는 리스너 등록
@@ -255,7 +271,7 @@ public class MainActivity extends AppCompatActivity
         addItems();
         mClusterManager.cluster();
 
-        Log.d("MainActivity", "onMapReady: call");
+
 
 
         // 구글지도(지구) 에서의 zoom 레벨은 1~23 까지 가능합니다.
@@ -308,11 +324,9 @@ public class MainActivity extends AppCompatActivity
             e.printStackTrace();
             Log.e("getLatLng","입출력 오류 - 서버에서 주소변환시 에러발생");
         }
-
-
-        for (int i = 0 ; i < list.size() ; i++){
-            Log.d("Address", list.get(i).toString());
-        }
+//        for (int i = 0 ; i < list.size() ; i++){
+//            Log.d("Address", list.get(i).toString());
+//        }
 
 
         return list.size() > 0 ? list.get(0) : null;
@@ -322,27 +336,22 @@ public class MainActivity extends AppCompatActivity
 
     public void setAddressMarker(Address addr){
 
-        // camera 좌쵸를 서울역 근처로 옮겨 봅니다.
         mMap.moveCamera(CameraUpdateFactory.newLatLng(
-                new LatLng(addr.getLatitude(), addr.getLongitude())   // 위도, 경도
+                new LatLng(addr.getLatitude(), addr.getLongitude())
         ));
 
 
         // 구글지도(지구) 에서의 zoom 레벨은 1~23 까지 가능합니다.
-        // 여러가지 zoom 레벨은 직접 테스트해보세요
-        CameraUpdate zoom = CameraUpdateFactory.zoomTo(10);
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo(12);
         mMap.animateCamera(zoom);   // moveCamera 는 바로 변경하지만,
         // animateCamera() 는 근거리에선 부드럽게 변경합니다
 
         // marker 표시
         // market 의 위치, 타이틀, 짧은설명 추가 가능.
-        MarkerOptions marker = new MarkerOptions();
+        /*MarkerOptions marker = new MarkerOptions();
         marker.position(new LatLng(addr.getLatitude(), addr.getLongitude()))
                 .title(addr.getAddressLine(0))
                 .snippet(addr.getFeatureName());
-        currentMarker = mMap.addMarker(marker);
-        currentMarker.showInfoWindow(); // 마커추가,화면에출력
-
 
         // 마커클릭 이벤트 처리
         // GoogleMap 에 마커클릭 이벤트 설정 가능.
@@ -352,7 +361,7 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(getApplicationContext(),marker.getTitle() + " 클릭했음", Toast.LENGTH_SHORT).show();
                 return false;
             }
-        });
+        });*/
 
     }
 
@@ -467,7 +476,7 @@ public class MainActivity extends AppCompatActivity
     }
 */
 
-
+/*
     public void setDefaultMarker(){
 
         defaultMarkerList = new ArrayList();
@@ -486,12 +495,14 @@ public class MainActivity extends AppCompatActivity
 
             }
 
-            isDefaultMarkerVisible = true;
+
         }else{
             Log.e("setDefaultMarker", "DataController.JSON_DEFAULT_LIST NULL ERROR");
         }
 
     }
+
+    */
 
     private void addIcon(IconGenerator iconFactory, String text, LatLng position) {
         MarkerOptions markerOptions = new MarkerOptions().
@@ -506,7 +517,7 @@ public class MainActivity extends AppCompatActivity
 
     public int getMarkerColor(int val){
         if( val >= 0 && val <= 30 ){
-            return Color.BLUE;
+            return Color.CYAN;
         } else if( val >= 31 && val <= 80 ) {
             return Color.GREEN;
         } else if( val >= 81 && val <= 150 ) {
@@ -570,16 +581,22 @@ public class MainActivity extends AppCompatActivity
         DataController dc = new DataController();
         dc.getData();
 
-        if(DataController.JSON_DEFAULT_LIST != null){
-            for(int i = 0 ; i < DataController.JSON_DEFAULT_LIST.size() ; i++){
-                MarkerVO vo = (MarkerVO) DataController.JSON_DEFAULT_LIST.get(i);
+        Iterator<String> keys = MapConst.markerMap.keySet().iterator();
+        Log.e("MapConst.markerMap", "total count : " + MapConst.markerMap.size());
+        int errCnt = 0, norCnt = 0;
+        while ( keys.hasNext() ) {
+            String key = keys.next();
+            MarkerVO vo = MapConst.markerMap.get(key);
+            if( vo.getPm10Value() == null || vo.getPm10Value().equals("")){
+                errCnt++;
+                Log.e("MapConst.markerMap", key + " : " + vo.getPm10Value());
+            }else {
                 mClusterManager.addItem(vo);
-
+                norCnt++;
             }
-
-        }else{
-            Log.e("setDefaultMarker", "DataController.JSON_DEFAULT_LIST NULL ERROR");
         }
+        Log.e("MapConst.markerMap", "null or empty count : " + errCnt);
+        Log.e("MapConst.markerMap", "mClusterManager size : " + norCnt);
 
  /*
         mClusterManager.addItem(new MarkerVO(new LatLng(37.5665350,126.9779690), "서울1", "1", "10"));
@@ -597,16 +614,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-/*
 
-    private LatLng position() {
-        return new LatLng(random(51.6723432, 51.38494009999999), random(0.148271, -0.3514683));
-    }
-
-    private double random(double min, double max) {
-        return mRandom.nextDouble() * (max - min) + min;
-    }
-*/
 
 
 
@@ -623,19 +631,18 @@ public class MainActivity extends AppCompatActivity
         /*private final ImageView mImageView;
         private final ImageView mClusterImageView;*/
 
-  /*      private final TextView mTextView;
+       /* private final TextView mTextView;
         private final TextView mClusterTextView;
 */
-
         public MarkerVORenderer() {
             super(getApplicationContext(), mMap, mClusterManager);
-/*
-            View multiProfile = getLayoutInflater().inflate(R.layout.multi_profile, null);
+
+         /*   View multiProfile = getLayoutInflater().inflate(R.layout.multi_profile, null);
             mClusterIconGenerator.setContentView(multiProfile);
-            mClusterTextView = (TextView) multiProfile.findViewById(R.id.tv_map_marker);
+            mClusterTextView = (TextView) multiProfile.findViewById(R.id.tv_map_clustered);
             mTextView = new TextView(getApplicationContext());
-            mIconGenerator.setContentView(mTextView);
-            */
+            mIconGenerator.setContentView(mTextView);*/
+
          /*    mClusterImageView = (ImageView) multiProfile.findViewById(R.id.image);
             mImageView = new ImageView(getApplicationContext());
            mDimension = (int) getResources().getDimension(R.dimen.custom_profile_image);
@@ -647,18 +654,23 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onBeforeClusterItemRendered(MarkerVO vo, MarkerOptions markerOptions) {
-            Log.d("asadsadsad", vo.getCityName());
+            Log.d("singleItem", vo.getSidoName() + " " + vo.getCityName());
             // Draw a single person.
             // Set the info window to show their name.
             //mImageView.setImageResource(R.drawable.ic_menu_camera);
             //Bitmap icon = mIconGenerator.makeIcon();
             //markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(vo.getCityName());
-            String str = vo.getCityName() + " " + vo.getSidoName() + " " + vo.getPm10Value();
+            String str = vo.getSidoName() + " " + vo.getCityName() + " " + vo.getPm10Value();
+            String val = vo.getPm10Value();
+
+            if(val != null && !"".equals(val)){
+                mIconGenerator.setColor(getMarkerColor( Integer.parseInt(val) ));
+                //mIconGenerator.setColor(0xE0FFFF);
+            }
             //mTextView.setText(str);
-            mIconGenerator.setColor(Color.YELLOW);
+
             markerOptions.icon(BitmapDescriptorFactory.fromBitmap(mIconGenerator.makeIcon(str)))
                     .anchor(mIconGenerator.getAnchorU(), mIconGenerator.getAnchorV());
-            super.onBeforeClusterItemRendered(vo, markerOptions);
 
         }
 
@@ -674,7 +686,7 @@ public class MainActivity extends AppCompatActivity
            // Note: this method runs on the UI thread. Don't spend too much time in here (like in this example).
 
            //Drawable marker;
-           int ClusterSize = cluster.getSize();
+          /* int ClusterSize = cluster.getSize();
 
            //marker = getApplication().getResources().getDrawable(R.drawable.ic_menu_camera);
            mClusterIconGenerator.setColor(Color.GREEN);
@@ -686,8 +698,40 @@ public class MainActivity extends AppCompatActivity
            mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
 
            BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(mClusterIconGenerator.makeIcon());
-           markerOptions.icon(icon);
+           markerOptions.icon(icon);*/
+         /*  List<Drawable> profilePhotos = new ArrayList<Drawable>(Math.min(4, cluster.getSize()));
+           int width = mDimension;
+           int height = mDimension;
 
+
+           MultiDrawable multiDrawable = new MultiDrawable(profilePhotos);
+           multiDrawable.setBounds(0, 0, width, height);
+
+           mClusterImageView.setImageDrawable(multiDrawable);
+           Bitmap icon = mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
+           markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
+            */
+
+           int sum = 0;
+           int cnt = 0;
+           double avg = 0;
+           for (MarkerVO v : cluster.getItems()) {
+               String val = v.getPm10Value();
+               if ( val != null && !"".equals(val)){
+                  sum += Integer.parseInt(val);
+                   cnt++;
+               }
+           }
+
+           if(cnt == 0){
+               avg = sum / 1;
+           }else{
+               avg = sum / cnt;
+           }
+
+           mClusterIconGenerator.setColor( getMarkerColor( (int) Math.round(avg) ));
+           Bitmap icon = mClusterIconGenerator.makeIcon("Avg:" + (int) Math.round(avg));
+           markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
 
         }
 
@@ -696,16 +740,10 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected boolean shouldRenderAsCluster(Cluster cluster) {
             Log.d("shouldRenderAsCluster", cluster.getSize()+"");
-
             // Always render clusters.
-            //return cluster.getSize() > 5;
-            return cluster.getSize() > 5;
+            return cluster.getSize() > 2;
 
         }
-
-
-
-
     }
 
 }

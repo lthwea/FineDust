@@ -1,26 +1,16 @@
 package com.lthwea.finedust.controller;
 
-import android.util.Log;
-
-import com.google.android.gms.maps.model.LatLng;
+import com.lthwea.finedust.cnst.MapConst;
 import com.lthwea.finedust.vo.MarkerVO;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.Socket;
 import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by LeeTaeHun on 2017. 3. 30..
@@ -186,7 +176,6 @@ public class DataController {
             }
             br.close();
 
-            JSON_DEFAULT_LIST = new ArrayList();
             JSONArray jar = new JSONArray(sb.toString());
 
 
@@ -196,15 +185,11 @@ public class DataController {
                 for(int j = 0 ; j < jsonArray.length() ; j++){
 
                     JSONObject tmp = (JSONObject) jsonArray.get(j);
-                    MarkerVO vo = new MarkerVO();
-                    vo.setCityName((String) tmp.get("cityName"));
-                    vo.setDataTime((String) tmp.get("dataTime"));
-                    vo.setSidoName((String) tmp.get("sidoName"));
-                    vo.setPm10Value((String) tmp.get("pm10Value"));
-                    vo.setPosition(position());
-                    Log.d("JSON_DEFAULT_LIST", vo.getSidoName() + "\t" + vo.getCityName() + "\t" + vo.getPm10Value() + "\t" + vo.getDataTime());
+                    String key = tmp.get("sidoName")+ "" +tmp.get("cityName");
 
-                    JSON_DEFAULT_LIST.add(vo);
+                    MarkerVO vo = MapConst.markerMap.get(key);
+                    vo.setPm10Value((String) tmp.get("pm10Value"));
+                    MapConst.markerMap.put(key, vo);
                 }
             }
 
@@ -219,6 +204,9 @@ public class DataController {
 
     }
 
+
+/*
+
     private LatLng position() {
         return new LatLng(random(36.4789102, 127.7250393), random(0.148271, 0.3514683));
     }
@@ -228,6 +216,7 @@ public class DataController {
         return mRandom.nextDouble() * (max - min) + min;
     }
 
+*/
 
 /*
 
