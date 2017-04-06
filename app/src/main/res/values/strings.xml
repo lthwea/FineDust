@@ -7,6 +7,14 @@
     <string name="action_settings">Settings</string>
 
     <!-- 툴바 검색명 -->
-    <string name="toolbar_serarch">Search</string>
+    <string name="toolbar_serarch">검색</string>
+
+
+    <!-- 초기화면 설정을 위한 pref String -->
+    <string name="pref_init_is_first">init_is_first</string>
+    <string name="pref_init_location_lat">init_location_lat</string>
+    <string name="pref_init_location_lng">init_location_lng</string>
+    <string name="pref_init_location_zoom">init_location_zoom</string>
+
 
 </resources>

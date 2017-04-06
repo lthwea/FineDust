@@ -1,6 +1,7 @@
 package com.lthwea.finedust.activity;
 
 import android.app.SearchManager;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Address;
@@ -12,6 +13,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -39,6 +41,7 @@ import com.google.maps.android.ui.IconGenerator;
 import com.lthwea.finedust.R;
 import com.lthwea.finedust.cnst.MapConst;
 import com.lthwea.finedust.controller.DataController;
+import com.lthwea.finedust.controller.PrefController;
 import com.lthwea.finedust.vo.MarkerVO;
 
 import java.io.IOException;
@@ -52,19 +55,23 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
 //        GoogleMap.OnMapClickListener,
 //        GoogleMap.OnCameraMoveStartedListener,
-//        GoogleMap.OnCameraMoveListener,
 //        GoogleMap.OnCameraIdleListener,
 //        GoogleMap.OnCameraMoveCanceledListener,
+        GoogleMap.OnCameraMoveListener,
+        GoogleMap.OnMarkerDragListener,
         ClusterManager.OnClusterClickListener<MarkerVO>, ClusterManager.OnClusterInfoWindowClickListener<MarkerVO>, ClusterManager.OnClusterItemClickListener<MarkerVO>,
         ClusterManager.OnClusterItemInfoWindowClickListener<MarkerVO> {
 
 
     private GoogleMap mMap;
     private Geocoder geocoder;
-    private List defaultMarkerList;
-
     private ClusterManager<MarkerVO> mClusterManager;
 
+
+    private Marker initMarker;
+    private boolean isSettingInitMarker = false;
+
+    private PrefController pref;
 
 
     @Override
@@ -92,10 +99,25 @@ public class MainActivity extends AppCompatActivity
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
+
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+
+        /*navigationView.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View v) {
+                Log.d("navigationView","onclick");
+
+                int size = navigationView.getMenu().size();
+                for (int i = 0; i < size; i++) {
+                    navigationView.getMenu().getItem(i).setChecked(false);
+                }
+            }
+        });*/
 
         // firebase FCM
        /* FirebaseMessaging.getInstance().subscribeToTopic("news");
@@ -126,126 +148,38 @@ public class MainActivity extends AppCompatActivity
         }*/
 
 
-
-
-
-
-
-
-
-
-
-
-
         //Network 사용 모드
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
 
-    }
+        // 초기화면 설정을 위한 pref
+        pref = new PrefController(this);
+        if(pref.isFirstInitMarker()){
+            //처음이면 기본값
+            pref.setPrefInitMarker(pref.DEFAULT_LAT, pref.DEFAULT_LNG, pref.DEFAULT_ZOOM);
+            //처음인지 아닌지 설정은 한번이라도 설정을 했는지 여부에서 체크한다
 
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-
-    // 툴바
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        //search view로 수정
-        getMenuInflater().inflate(R.menu.main, menu);
-        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_settings));
-        SearchManager searchManager = (SearchManager) getSystemService(SEARCH_SERVICE);
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        searchView.setQueryHint("시,군,구,동 검색...");
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
-
-            @Override
-            public boolean onQueryTextSubmit(String s) {
-
-                Address addr = getAddress(s);
-                if(addr != null){
-                    if("대한민국".equals(addr.getCountryName())){
-                        setAddressMarker(addr);
-                    }else{
-                        Toast.makeText(getApplicationContext(), "주소가 올바르지 않습니다.", Toast.LENGTH_SHORT).show();
-                    }
-                }else{
-                    Toast.makeText(getApplicationContext(), "주소가 올바르지 않습니다.", Toast.LENGTH_SHORT).show();
-                }
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String s) {
-                Log.d("onQueryTextChange", s);
-                return false;
-            }
-        });
-
-        return true;
-    }
-
-/*
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-*/
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
+        }else{
 
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
     }
+
 
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        Log.d("MainActivity", "onMapReady: call");
+        Log.d("  MainActivity", "onMapReady: call");
 
         mMap = googleMap;
+        moveCarmeraPrefValue();
 
         // 구글맵 터치시 발생하는 리스너 등록
 //        mMap.setOnMapClickListener(this);
 //        mMap.setOnCameraMoveStartedListener(this);
 //        mMap.setOnCameraMoveListener(this);
 //        mMap.setOnCameraMoveCanceledListener(this);
-
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(35.9077570,127.7669220), 6));
-
         mClusterManager = new ClusterManager<MarkerVO>(this, mMap);
         mClusterManager.setRenderer(new MarkerVORenderer());
         //mMap.setOnCameraIdleListener(mClusterManager);
@@ -260,7 +194,6 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
-
         mMap.setOnMarkerClickListener(mClusterManager);
         mMap.setOnInfoWindowClickListener(mClusterManager);
         mClusterManager.setOnClusterClickListener(this);
@@ -268,313 +201,13 @@ public class MainActivity extends AppCompatActivity
         mClusterManager.setOnClusterItemClickListener(this);
         mClusterManager.setOnClusterItemInfoWindowClickListener(this);
 
+        // for setting init location in google map
+        mMap.setOnMarkerDragListener(this);
+        mMap.setOnCameraMoveListener(this);
+
         addItems();
         mClusterManager.cluster();
 
-
-
-
-        // 구글지도(지구) 에서의 zoom 레벨은 1~23 까지 가능합니다.
-        // 여러가지 zoom 레벨은 직접 테스트해보세요
-//        CameraUpdate zoom = CameraUpdateFactory.zoomTo(6);
-//        mMap.animateCamera(zoom);   // moveCamera 는 바로 변경하지만,
-        // animateCamera() 는 근거리에선 부드럽게 변경합니다
-
-
-/*        DataController dc = new DataController();
-        String json = dc.getDefaultData();*/
-
-/*
-
-        mClusterManager = new ClusterManager<DefaultVO>(this, mMap);
-        List<DefaultVO> items = null;
-        try {
-            items = new VOReader().read(json);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        mClusterManager.addItems(items);
-
-*/
-
- //       defaultMarkerList = new ArrayList();
-
-       /* try {
-            dc.getDefaultData2();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-
-       /* setDefaultMarker();
-        dc.getSeoulData();
-*/
-
-
-    }
-
-
-    public Address getAddress(String addr){
-        List<Address> list = null;
-
-        try {
-            list = geocoder.getFromLocationName(
-                    addr, // 지역 이름
-                    1); // 읽을 개수
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e("getLatLng","입출력 오류 - 서버에서 주소변환시 에러발생");
-        }
-//        for (int i = 0 ; i < list.size() ; i++){
-//            Log.d("Address", list.get(i).toString());
-//        }
-
-
-        return list.size() > 0 ? list.get(0) : null;
-    }
-
-
-
-    public void setAddressMarker(Address addr){
-
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(
-                new LatLng(addr.getLatitude(), addr.getLongitude())
-        ));
-
-
-        // 구글지도(지구) 에서의 zoom 레벨은 1~23 까지 가능합니다.
-        CameraUpdate zoom = CameraUpdateFactory.zoomTo(12);
-        mMap.animateCamera(zoom);   // moveCamera 는 바로 변경하지만,
-        // animateCamera() 는 근거리에선 부드럽게 변경합니다
-
-        // marker 표시
-        // market 의 위치, 타이틀, 짧은설명 추가 가능.
-        /*MarkerOptions marker = new MarkerOptions();
-        marker.position(new LatLng(addr.getLatitude(), addr.getLongitude()))
-                .title(addr.getAddressLine(0))
-                .snippet(addr.getFeatureName());
-
-        // 마커클릭 이벤트 처리
-        // GoogleMap 에 마커클릭 이벤트 설정 가능.
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-                Toast.makeText(getApplicationContext(),marker.getTitle() + " 클릭했음", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        });*/
-
-    }
-
-
-//    @Override
-//    public void onMapClick(LatLng latLng) {
-//        Log.d("onMapClick", latLng.latitude + "," + latLng.longitude);
-//    }
-
-//
-//    @Override
-//    public void onCameraMoveStarted(int i) {
-//
-//        double currentZoom = mMap.getCameraPosition().zoom;
-//
-//        Log.d("onCameraMoveStarted", i + "\t" + currentZoom);
-//
-//
-//      /*  if( currentZoom <= 10 ){
-//
-//            if( isDefaultMarkerVisible == false && defaultMarkerList != null) {
-//                for (int j = 0; j < defaultMarkerList.size(); j++) {
-//                    Marker m = (Marker) defaultMarkerList.get(j);
-//                    m.setVisible(true);
-//                }
-//
-//                isDefaultMarkerVisible = true;
-//            }
-//
-//        }else if(currentZoom > 10 && currentZoom <= 12){
-//            Log.d("currentZoom", "open");
-//            if( isDefaultMarkerVisible == true && defaultMarkerList != null){
-//                for(int j = 0; j < defaultMarkerList.size() ; j++){
-//                    Marker m = (Marker) defaultMarkerList.get(j);
-//                    m.setVisible(false);
-//                }
-//
-//                isDefaultMarkerVisible = false;
-//            }
-//        }*/
-//
-//
-//
-//        /*
-//        *   6~7.5           //전체
-//        *   7.5~10          //시
-//        *   10~12           //구
-//        *   12~15           //동
-//        *
-//        * */
-//
-//      /*  switch (i) {
-//            case GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE:
-//
-//                break;
-//            case GoogleMap.OnCameraMoveStartedListener.REASON_API_ANIMATION:
-//
-//                break;
-//            case GoogleMap.OnCameraMoveStartedListener.REASON_DEVELOPER_ANIMATION:
-//
-//                break;
-//        }
-//
-//        */
-///*
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-33.8696, 151.2094), 10));
-//
-//        IconGenerator iconFactory = new IconGenerator(this);
-//        addIcon(iconFactory, "Default", new LatLng(-33.8696, 151.2094));
-//
-//        iconFactory.setColor(Color.CYAN);
-//        addIcon(iconFactory, "Custom color", new LatLng(-33.9360, 151.2070));
-//
-//        iconFactory.setRotation(90);
-//        iconFactory.setStyle(IconGenerator.STYLE_RED);
-//        addIcon(iconFactory, "Rotated 90 degrees", new LatLng(-33.8858, 151.096));
-//
-//        iconFactory.setContentRotation(-90);
-//        iconFactory.setStyle(IconGenerator.STYLE_PURPLE);
-//        addIcon(iconFactory, "Rotate=90, ContentRotate=-90", new LatLng(-33.9992, 151.098));
-//
-//        iconFactory.setRotation(0);
-//        iconFactory.setContentRotation(90);
-//        iconFactory.setStyle(IconGenerator.STYLE_GREEN);
-//        addIcon(iconFactory, "ContentRotate=90", new LatLng(-33.7677, 151.244));
-//
-//     iconFactory.setRotation(0);
-//        iconFactory.setContentRotation(0);
-//        iconFactory.setStyle(IconGenerator.STYLE_ORANGE);
-//        addIcon(iconFactory, makeCharSequence(), new LatLng(-33.77720, 151.12412));*/
-//
-//    }
-
-/*
-    @Override
-    public void onCameraMove() {
-        Log.d("onCameraMove", "onCameraMove");
-
-
-    }
-
-    @Override
-    public void onCameraIdle() {
-        Log.d("onCameraIdle", "onCameraIdle");
-
-
-    }
-
-    @Override
-    public void onCameraMoveCanceled() {
-        Log.d("onCameraMoveCanceled", "cancle");
-    }
-*/
-
-/*
-    public void setDefaultMarker(){
-
-        defaultMarkerList = new ArrayList();
-       // MarkerOptions marker = new MarkerOptions();
-
-        IconGenerator iconFactory = new IconGenerator(this);
-
-        if(DataController.JSON_DEFAULT_LIST != null){
-            for(int i = 0 ; i < DataController.JSON_DEFAULT_LIST.size() ; i++){
-                DefaultVO vo = (DefaultVO) DataController.JSON_DEFAULT_LIST.get(i);
-
-                int val = Integer.parseInt(vo.getCityvalue());
-                int color = getMarkerColor(val);
-                iconFactory.setColor(color);
-                addIcon(iconFactory, vo.getCityName() + ":" +vo.getCityvalue(), new LatLng(vo.getLat(), vo.getLng()));
-
-            }
-
-
-        }else{
-            Log.e("setDefaultMarker", "DataController.JSON_DEFAULT_LIST NULL ERROR");
-        }
-
-    }
-
-    */
-
-    private void addIcon(IconGenerator iconFactory, String text, LatLng position) {
-        MarkerOptions markerOptions = new MarkerOptions().
-                icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(text))).
-                position(position).
-                anchor(iconFactory.getAnchorU(), iconFactory.getAnchorV());
-
-        Marker tmp = mMap.addMarker(markerOptions);
-
-        defaultMarkerList.add(tmp);
-    }
-
-    public int getMarkerColor(int val){
-        if( val >= 0 && val <= 30 ){
-            return Color.CYAN;
-        } else if( val >= 31 && val <= 80 ) {
-            return Color.GREEN;
-        } else if( val >= 81 && val <= 150 ) {
-            return Color.YELLOW;
-        } else if( val >= 151 ){
-            return Color.RED;
-        } else{
-            return Color.BLACK;
-        }
-
-    }
-
-    @Override
-    public boolean onClusterClick(Cluster<MarkerVO> cluster) {
-        Log.d("onClusterClick", cluster.getSize()+"");
-
-        // Show a toast with some info when the cluster is clicked.
-        String firstName = cluster.getItems().iterator().next().getCityName();
-        Toast.makeText(this, cluster.getSize() + " (including " + firstName + ")", Toast.LENGTH_SHORT).show();
-
-            // Zoom in the cluster. Need to create LatLngBounds and including all the cluster items
-            // inside of bounds, then animate to center of the bounds.
-
-        // Create the builder to collect all essential cluster items for the bounds.
-        LatLngBounds.Builder builder = LatLngBounds.builder();
-        for (ClusterItem item : cluster.getItems()) {
-                builder.include(item.getPosition());
-        }
-        // Get the LatLngBounds
-        final LatLngBounds bounds = builder.build();
-        // Animate camera to the bounds
-        try {
-            //mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(cluster.getPosition(), (float) Math.floor(mMap.getCameraPosition().zoom + 1)), 300,null);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return true;
-    }
-
-
-    @Override
-    public void onClusterInfoWindowClick(Cluster<MarkerVO> cluster) {
-        // Does nothing, but you could go to a list of the users.
-    }
-
-    @Override
-    public boolean onClusterItemClick(MarkerVO item) {
-        // Does nothing, but you could go into the user's profile page, for example.
-        return false;
-    }
-
-    @Override
-    public void onClusterItemInfoWindowClick(MarkerVO item) {
-        // Does nothing, but you could go into the user's profile page, for example.
     }
 
     private void addItems() {
@@ -617,6 +250,285 @@ public class MainActivity extends AppCompatActivity
 
 
 
+
+
+    /*
+                Start Toolbar Search Code
+     * */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        //search view로 수정
+        getMenuInflater().inflate(R.menu.main, menu);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_settings));
+        SearchManager searchManager = (SearchManager) getSystemService(SEARCH_SERVICE);
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setQueryHint("시,군,구,동 검색...");
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
+
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+
+                Address addr = getAddress(s);
+                if(addr != null){
+                    if("대한민국".equals(addr.getCountryName())){
+                        setAddressMarker(addr);
+                    }else{
+                        Toast.makeText(getApplicationContext(), "주소가 올바르지 않습니다.", Toast.LENGTH_SHORT).show();
+                    }
+                }else{
+                    Toast.makeText(getApplicationContext(), "주소가 올바르지 않습니다.", Toast.LENGTH_SHORT).show();
+                }
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                Log.d("onQueryTextChange", s);
+                return false;
+            }
+        });
+
+        return true;
+    }
+
+    public Address getAddress(String addr){
+        List<Address> list = null;
+
+        try {
+            list = geocoder.getFromLocationName(
+                    addr, // 지역 이름
+                    1); // 읽을 개수
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e("getLatLng","입출력 오류 - 서버에서 주소변환시 에러발생");
+        }
+
+        return list.size() > 0 ? list.get(0) : null;
+    }
+
+    public void setAddressMarker(Address addr){
+        mMap.moveCamera(CameraUpdateFactory.newLatLng( new LatLng(addr.getLatitude(), addr.getLongitude())));
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo(12);
+        mMap.animateCamera(zoom);
+
+        if(isSettingInitMarker){
+            getInitMarker().setPosition(new LatLng(addr.getLatitude(), addr.getLongitude()));
+        }
+    }
+
+
+    /**
+     *          Navigation Item Event
+     *
+     * */
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+        if (id == R.id.mn_alarm) {
+
+
+
+
+        } else if (id == R.id.mn_location) {
+
+            if( isSettingInitMarker == false){
+                isSettingInitMarker = true;
+                setInitLocationInMap();
+            }else{
+                Toast.makeText(getApplicationContext(), "실행중 입니다.", Toast.LENGTH_SHORT).show();
+            }
+
+        } else if (id == R.id.mn_license) {
+            AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+            alertDialog.setTitle("데이터정보");
+            alertDialog.setMessage("데이터출처 : 공공데이터포털");
+            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            alertDialog.show();
+
+        }/*else if (id == R.id.nav_gallery) {
+
+        }*/
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return false;
+
+    }
+
+
+
+
+
+
+    /**
+     *
+     *          초기 시작 위치 설정 부분
+     *
+     * */
+    public void setInitLocationInMap(){
+
+        moveCarmeraPrefValue();
+
+        // marker 표시
+        // market 의 위치, 타이틀, 짧은설명 추가 가능.
+        MarkerOptions marker = new MarkerOptions();
+        marker.position(new LatLng(pref.getPrefInitMarkerLat(), pref.getPrefInitMarkerLng()))
+                .title("앱 실행시 시작위치를 선택합니다.")
+                .snippet("마커를 롱클릭 후 드래그하여 이동해주세요.")
+                .draggable(true);
+
+        setInitMarker(mMap.addMarker(marker));
+        getInitMarker().showInfoWindow();
+
+        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                if(marker.equals(initMarker)){
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("시작위치 설정");
+                    builder.setCancelable(true);
+                    builder.setMessage("위치 설정을 취소하겠습니까?");
+                    builder.setPositiveButton("네", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            stopInitLocationInMap();
+                        }
+                    });
+                    builder.setNegativeButton("아니요", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    });
+                    builder.setNeutralButton("기본값으로 변경", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Toast.makeText(getApplicationContext(), "기본값으로 변경하였습니다.", Toast.LENGTH_SHORT).show();
+                            setPrefInitMarkerDefaultValue();
+                            moveCarmeraPrefValue();
+                            stopInitLocationInMap();
+                        }
+                    });
+                    builder.show();
+                }
+            }
+        });
+    }
+
+    public void stopInitLocationInMap(){
+        isSettingInitMarker = false;
+        getInitMarker().remove();
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+        if(marker.equals(initMarker) && isSettingInitMarker == true){
+            LatLng dragPosition = marker.getPosition();
+            final double dragLat = dragPosition.latitude;
+            final double dragLong = dragPosition.longitude;
+            final double zoom = mMap.getCameraPosition().zoom;
+            Log.d("onMarkerDrag", "End"+  dragLat + "," + dragLong + " ," + zoom);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("시작위치 설정");
+            builder.setCancelable(true);
+            builder.setMessage("현재 위치를 시작위치로 설정하시겠습니까?");
+            builder.setPositiveButton("설정", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    pref.setPrefInitMarker(dragLat, dragLong, zoom);
+                    pref.setIsFirstInitMarker(false);
+                    stopInitLocationInMap();
+                    Toast.makeText(getApplicationContext(), "앱 실행시 시작위치를 변경하였습니다.", Toast.LENGTH_SHORT).show();
+                }
+            });
+            builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+            builder.setNeutralButton("기본값으로 변경", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Toast.makeText(getApplicationContext(), "기본값으로 변경하였습니다.", Toast.LENGTH_SHORT).show();
+                    setPrefInitMarkerDefaultValue();
+                    moveCarmeraPrefValue();
+                    stopInitLocationInMap();
+                }
+            });
+            builder.show();
+
+        }
+    }
+
+
+
+
+
+
+
+
+    /*
+    *   Pref
+    * */
+    public void moveCarmeraPrefValue(){
+        mMap.moveCamera(CameraUpdateFactory.newLatLng( new LatLng(pref.getPrefInitMarkerLat(),pref.getPrefInitMarkerLng())));
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo( (int) pref.getPrefInitMarkerZoom());
+        mMap.animateCamera(zoom);
+    }
+
+    public void setPrefInitMarkerDefaultValue(){
+        pref.setPrefInitMarker(pref.DEFAULT_LAT, pref.DEFAULT_LNG, pref.DEFAULT_ZOOM);
+        pref.setIsFirstInitMarker(false);
+    }
+
+
+
+
+
+    /**
+     *
+     *   Google Map Clustering
+     *
+     * */
+    @Override
+    public boolean onClusterClick(Cluster<MarkerVO> cluster) {
+        Log.d("onClusterClick", cluster.getSize()+"");
+
+        // Show a toast with some info when the cluster is clicked.
+        String firstName = cluster.getItems().iterator().next().getCityName();
+        Toast.makeText(this, cluster.getSize() + " (including " + firstName + ")", Toast.LENGTH_SHORT).show();
+
+        // Zoom in the cluster. Need to create LatLngBounds and including all the cluster items
+        // inside of bounds, then animate to center of the bounds.
+
+        // Create the builder to collect all essential cluster items for the bounds.
+        LatLngBounds.Builder builder = LatLngBounds.builder();
+        for (ClusterItem item : cluster.getItems()) {
+            builder.include(item.getPosition());
+        }
+        // Get the LatLngBounds
+        final LatLngBounds bounds = builder.build();
+        // Animate camera to the bounds
+        try {
+            //mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(cluster.getPosition(), (float) Math.floor(mMap.getCameraPosition().zoom + 2)), 300,null);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
 
 
     /**
@@ -674,8 +586,6 @@ public class MainActivity extends AppCompatActivity
 
         }
 
-
-
        @Override
         protected void onBeforeClusterRendered(Cluster<MarkerVO> cluster, MarkerOptions markerOptions) {
 
@@ -722,7 +632,6 @@ public class MainActivity extends AppCompatActivity
                    cnt++;
                }
            }
-
            if(cnt == 0){
                avg = sum / 1;
            }else{
@@ -735,15 +644,85 @@ public class MainActivity extends AppCompatActivity
 
         }
 
-
-
         @Override
         protected boolean shouldRenderAsCluster(Cluster cluster) {
-            Log.d("shouldRenderAsCluster", cluster.getSize()+"");
             // Always render clusters.
             return cluster.getSize() > 2;
 
         }
+    }
+
+    public int getMarkerColor(int val){
+        if( val >= 0 && val <= 30 ){
+            return Color.CYAN;
+        } else if( val >= 31 && val <= 80 ) {
+            return Color.GREEN;
+        } else if( val >= 81 && val <= 150 ) {
+            return Color.YELLOW;
+        } else if( val >= 151 ){
+            return Color.RED;
+        } else{
+            return Color.BLACK;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+    @Override
+    public void onClusterInfoWindowClick(Cluster<MarkerVO> cluster) {
+        // Does nothing, but you could go to a list of the users.
+    }
+
+    @Override
+    public boolean onClusterItemClick(MarkerVO item) {
+        // Does nothing, but you could go into the user's profile page, for example.
+        return false;
+    }
+
+    @Override
+    public void onClusterItemInfoWindowClick(MarkerVO item) {
+        // Does nothing, but you could go into the user's profile page, for example.
+    }
+
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+    }
+
+    @Override
+    public void onCameraMove() {
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+
+    public Marker getInitMarker() {
+        return initMarker;
+    }
+
+    public void setInitMarker(Marker initMarker) {
+        this.initMarker = initMarker;
     }
 
 }

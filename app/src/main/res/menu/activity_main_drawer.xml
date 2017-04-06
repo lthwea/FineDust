@@ -2,22 +2,27 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:checkableBehavior="single">
+
         <item
-            android:id="@+id/nav_camera"
+            android:id="@+id/mn_alarm"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="미세먼지알림" />
+        <item
+            android:id="@+id/mn_location"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="시작위치설정" />
+
+        <item
+            android:id="@+id/mn_license"
             android:icon="@drawable/ic_menu_camera"
-            android:title="set Location" />
-        <item
+            android:title="데이터정보" />
+
+
+      <!--  <item
             android:id="@+id/nav_gallery"
             android:icon="@drawable/ic_menu_gallery"
-            android:title="Push" />
-        <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
-        <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
+            android:title="Push" />-->
+
     </group>
 
     <!--<item android:title="Communicate">
