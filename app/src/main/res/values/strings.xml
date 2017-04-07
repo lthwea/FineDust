@@ -17,4 +17,8 @@
     <string name="pref_init_location_zoom">init_location_zoom</string>
 
 
+    <!-- 알림 등록을 위한 pref String -->
+    <string name="pref_alarm_use">alarm_use</string>
+
+
 </resources>

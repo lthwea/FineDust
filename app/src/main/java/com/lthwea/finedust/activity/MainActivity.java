@@ -2,10 +2,12 @@ package com.lthwea.finedust.activity;
 
 import android.app.SearchManager;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.design.widget.NavigationView;
@@ -42,6 +44,7 @@ import com.lthwea.finedust.R;
 import com.lthwea.finedust.cnst.MapConst;
 import com.lthwea.finedust.controller.DataController;
 import com.lthwea.finedust.controller.PrefController;
+import com.lthwea.finedust.util.Utils;
 import com.lthwea.finedust.vo.MarkerVO;
 
 import java.io.IOException;
@@ -54,11 +57,12 @@ import static com.lthwea.finedust.R.id.map;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
 //        GoogleMap.OnMapClickListener,
-//        GoogleMap.OnCameraMoveStartedListener,
+        GoogleMap.OnCameraMoveStartedListener,
 //        GoogleMap.OnCameraIdleListener,
 //        GoogleMap.OnCameraMoveCanceledListener,
         GoogleMap.OnCameraMoveListener,
         GoogleMap.OnMarkerDragListener,
+        GoogleMap.OnInfoWindowClickListener,
         ClusterManager.OnClusterClickListener<MarkerVO>, ClusterManager.OnClusterInfoWindowClickListener<MarkerVO>, ClusterManager.OnClusterItemClickListener<MarkerVO>,
         ClusterManager.OnClusterItemInfoWindowClickListener<MarkerVO> {
 
@@ -71,7 +75,16 @@ public class MainActivity extends AppCompatActivity
     private Marker initMarker;
     private boolean isSettingInitMarker = false;
 
+    private Marker alarmMarker;
+    private boolean isSettingAlarmMarker = false;
+
+
     private PrefController pref;
+
+
+    private Toolbar toolbar;
+
+    public static int INTENT_ALARM_CODE = 0;
 
 
     @Override
@@ -80,8 +93,19 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("FineDust");
         setSupportActionBar(toolbar);
+
+
+        /* 상태바, 타이틀바 */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(getResources().getColor(R.color.color_default_color));
+            getSupportActionBar().setBackgroundDrawable(getDrawable(R.color.color_default_color));
+        }
+
+
+
         //getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0x006D05));
 
         Log.d("MainActivity", "onCreate: call");
@@ -159,7 +183,6 @@ public class MainActivity extends AppCompatActivity
             //처음이면 기본값
             pref.setPrefInitMarker(pref.DEFAULT_LAT, pref.DEFAULT_LNG, pref.DEFAULT_ZOOM);
             //처음인지 아닌지 설정은 한번이라도 설정을 했는지 여부에서 체크한다
-
         }else{
 
         }
@@ -204,6 +227,7 @@ public class MainActivity extends AppCompatActivity
         // for setting init location in google map
         mMap.setOnMarkerDragListener(this);
         mMap.setOnCameraMoveListener(this);
+        mMap.setOnInfoWindowClickListener(this);
 
         addItems();
         mClusterManager.cluster();
@@ -248,6 +272,13 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    //          set Toolbar Title
+    @Override
+    public void onCameraMoveStarted(int i) {
+
+
+    }
+
 
 
 
@@ -257,6 +288,7 @@ public class MainActivity extends AppCompatActivity
      * */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+
         // Inflate the menu; this adds items to the action bar if it is present.
         //search view로 수정
         getMenuInflater().inflate(R.menu.main, menu);
@@ -266,8 +298,17 @@ public class MainActivity extends AppCompatActivity
         searchView.setQueryHint("시,군,구,동 검색...");
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
 
+
             @Override
             public boolean onQueryTextSubmit(String s) {
+                if (isSettingInitMarker){
+                    stopInitLocationInMap();
+                }
+
+                if (isSettingAlarmMarker){
+                    stopAlarmMarekrInMap();
+                }
+
 
                 Address addr = getAddress(s);
                 if(addr != null){
@@ -284,13 +325,22 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public boolean onQueryTextChange(String s) {
-                Log.d("onQueryTextChange", s);
+                if (isSettingInitMarker){
+                    stopInitLocationInMap();
+                }
+
+                if (isSettingAlarmMarker){
+                    stopAlarmMarekrInMap();
+                }
+
+
                 return false;
             }
         });
 
         return true;
     }
+
 
     public Address getAddress(String addr){
         List<Address> list = null;
@@ -325,23 +375,67 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
+
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         if (id == R.id.mn_alarm) {
 
+            if(isSettingInitMarker){
+                stopInitLocationInMap();
+            }
+
+            if (isSettingAlarmMarker){
+                stopAlarmMarekrInMap();
+            }
+
+            Intent i = new Intent( this, AlarmActivity.class );
+            startActivityForResult(i, INTENT_ALARM_CODE);
 
 
 
         } else if (id == R.id.mn_location) {
+            if (isSettingAlarmMarker){
+                stopAlarmMarekrInMap();
+            }
 
             if( isSettingInitMarker == false){
                 isSettingInitMarker = true;
                 setInitLocationInMap();
             }else{
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("시작위치 설정중 입니다.");
+                builder.setCancelable(true);
+                builder.setMessage("시작위치 설정을 취소하시겠습니까?");
+                builder.setPositiveButton("네", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        stopInitLocationInMap();
+                    }
+                });
+                builder.setNegativeButton("아니요", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+                builder.show();
+
+
                 Toast.makeText(getApplicationContext(), "실행중 입니다.", Toast.LENGTH_SHORT).show();
+
+
             }
 
         } else if (id == R.id.mn_license) {
+
+            if(isSettingInitMarker){
+                stopInitLocationInMap();
+            }
+            if (isSettingAlarmMarker){
+                stopAlarmMarekrInMap();
+            }
+
+
             AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
             alertDialog.setTitle("데이터정보");
             alertDialog.setMessage("데이터출처 : 공공데이터포털");
@@ -363,8 +457,57 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(data != null ){
+            Log.d("onActivityResult", "-> " + requestCode + ", " + requestCode + ", " + data.getStringExtra("isSetLocation"));
+
+            if (requestCode == INTENT_ALARM_CODE){
+                if("Y".equals(data.getStringExtra("isSetLocation"))){
+                    setAlarmMarkerInMap();
+                }
+            }
+        }
 
 
+    }
+
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+
+        if(marker.equals(initMarker)){
+
+            Toast.makeText(MainActivity.this, "initMarker 여기서 뭐하지...", Toast.LENGTH_SHORT).show();
+
+        }else if(marker.equals(alarmMarker)){
+
+            Toast.makeText(MainActivity.this, "alarmMarker 여기서 뭐하지...", Toast.LENGTH_SHORT).show();
+
+        }
+
+    }
+
+
+
+    public void setAlarmMarkerInMap(){
+        isSettingAlarmMarker = true;
+
+        moveCarmeraPrefValue();
+
+        MarkerOptions marker = new MarkerOptions();
+        marker.position(new LatLng(pref.getPrefInitMarkerLat(), pref.getPrefInitMarkerLng()))
+                .title("알림 받을 지역을 선택합니다.")
+                .snippet("마커를 롱클릭 후 드래그하여 이동해주세요.")
+                .draggable(true);
+
+        setAlarmMarker(mMap.addMarker(marker));
+        getAlarmMarker().showInfoWindow();
+
+
+    }
 
 
 
@@ -388,40 +531,15 @@ public class MainActivity extends AppCompatActivity
         setInitMarker(mMap.addMarker(marker));
         getInitMarker().showInfoWindow();
 
-        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+      /*  mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
                 if(marker.equals(initMarker)){
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                    builder.setTitle("시작위치 설정");
-                    builder.setCancelable(true);
-                    builder.setMessage("위치 설정을 취소하겠습니까?");
-                    builder.setPositiveButton("네", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            stopInitLocationInMap();
-                        }
-                    });
-                    builder.setNegativeButton("아니요", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                        }
-                    });
-                    builder.setNeutralButton("기본값으로 변경", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Toast.makeText(getApplicationContext(), "기본값으로 변경하였습니다.", Toast.LENGTH_SHORT).show();
-                            setPrefInitMarkerDefaultValue();
-                            moveCarmeraPrefValue();
-                            stopInitLocationInMap();
-                        }
-                    });
-                    builder.show();
+                    Toast.makeText(MainActivity.this, "여기서 뭐하지...", Toast.LENGTH_SHORT).show();
                 }
             }
-        });
+        });*/
     }
 
     public void stopInitLocationInMap(){
@@ -429,26 +547,46 @@ public class MainActivity extends AppCompatActivity
         getInitMarker().remove();
     }
 
+    public void stopAlarmMarekrInMap(){
+        isSettingAlarmMarker = false;
+        getAlarmMarker().remove();
+    }
+
     @Override
     public void onMarkerDragEnd(Marker marker) {
+
+        LatLng dragPosition = marker.getPosition();
+        final double dragLat = dragPosition.latitude;
+        final double dragLong = dragPosition.longitude;
+        final double zoom = mMap.getCameraPosition().zoom;
+
         if(marker.equals(initMarker) && isSettingInitMarker == true){
-            LatLng dragPosition = marker.getPosition();
-            final double dragLat = dragPosition.latitude;
-            final double dragLong = dragPosition.longitude;
-            final double zoom = mMap.getCameraPosition().zoom;
+
             Log.d("onMarkerDrag", "End"+  dragLat + "," + dragLong + " ," + zoom);
 
+            popInitMarkerDialog(dragLat, dragLong, zoom);
+
+
+
+
+        }else if(marker.equals(alarmMarker) && isSettingAlarmMarker == true){
+            final String location = Utils.getNearDistanceLocation(dragLat, dragLong);
+            Log.d("onMarkerDragEnd", location + "\t\t ....");
+
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("시작위치 설정");
+            builder.setTitle("알림 위치 설정");
             builder.setCancelable(true);
-            builder.setMessage("현재 위치를 시작위치로 설정하시겠습니까?");
-            builder.setPositiveButton("설정", new DialogInterface.OnClickListener() {
+            builder.setMessage("마커에서 가장 가까운 측정지\n" + location + " 입니다. 알림 설정하시겠습니까?");
+            builder.setPositiveButton("네", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    pref.setPrefInitMarker(dragLat, dragLong, zoom);
-                    pref.setIsFirstInitMarker(false);
-                    stopInitLocationInMap();
-                    Toast.makeText(getApplicationContext(), "앱 실행시 시작위치를 변경하였습니다.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "시간과 요일을 선택해주세요.", Toast.LENGTH_SHORT).show();
+                    stopAlarmMarekrInMap();
+
+                    Intent i = new Intent(getApplicationContext(), AlarmActivity.class);
+                    i.putExtra("ALARM_LOCATION", location);
+                    startActivityForResult(i, INTENT_ALARM_CODE);
+
                 }
             });
             builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
@@ -456,20 +594,53 @@ public class MainActivity extends AppCompatActivity
                 public void onClick(DialogInterface dialog, int which) {
                 }
             });
-            builder.setNeutralButton("기본값으로 변경", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Toast.makeText(getApplicationContext(), "기본값으로 변경하였습니다.", Toast.LENGTH_SHORT).show();
-                    setPrefInitMarkerDefaultValue();
-                    moveCarmeraPrefValue();
-                    stopInitLocationInMap();
-                }
-            });
             builder.show();
 
+
+
         }
+
+
+
+
     }
 
+
+
+
+
+    public void popInitMarkerDialog(final Double lat, final Double lng, final Double zoom){
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("시작위치 설정");
+        builder.setCancelable(true);
+        builder.setMessage("현재 위치를 시작위치로 설정하시겠습니까?");
+        builder.setPositiveButton("설정", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                pref.setPrefInitMarker(lat, lng, zoom);
+                pref.setIsFirstInitMarker(false);
+                stopInitLocationInMap();
+                Toast.makeText(getApplicationContext(), "앱 실행시 시작위치를 변경하였습니다.", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        builder.setNeutralButton("기본값으로 변경", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Toast.makeText(getApplicationContext(), "기본값으로 변경하였습니다.", Toast.LENGTH_SHORT).show();
+                setPrefInitMarkerDefaultValue();
+                moveCarmeraPrefValue();
+                stopInitLocationInMap();
+            }
+        });
+        builder.show();
+
+    }
 
 
 
@@ -529,6 +700,7 @@ public class MainActivity extends AppCompatActivity
 
         return true;
     }
+
 
 
     /**
@@ -725,6 +897,14 @@ public class MainActivity extends AppCompatActivity
         this.initMarker = initMarker;
     }
 
+
+    public Marker getAlarmMarker() {
+        return alarmMarker;
+    }
+
+    public void setAlarmMarker(Marker alarmMarker) {
+        this.alarmMarker = alarmMarker;
+    }
 }
 
 //동 -> 15

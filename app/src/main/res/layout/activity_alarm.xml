@@ -1,0 +1,184 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/LinearLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".activity.AlarmActivity" >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="지역, 시간, 반복 설정"
+        android:layout_marginBottom="10dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line_and_outline_grey"/>
+
+    <RelativeLayout
+        android:id="@+id/rl_loc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="20dp">
+
+    <TextView
+        android:id="@+id/tv_alarm_loc"
+        android:layout_alignParentLeft="true"
+        android:text="지역"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content" />
+
+    <TextView
+        android:id="@+id/tv_alarm_arrow1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/personal_item_arrow"/>
+
+    <TextView
+        android:id="@+id/tv_alarm_loc_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="5dp"
+        android:layout_toLeftOf="@id/tv_alarm_arrow1"
+        android:textColor="@color/black_33"/>
+
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line_and_outline_grey"/>
+
+
+    <RelativeLayout
+        android:id="@+id/rl_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="20dp">
+
+        <TextView
+            android:id="@+id/tv_alarm_time"
+            android:layout_alignParentLeft="true"
+            android:text="시간"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content" />
+
+        <TextView
+            android:id="@+id/tv_alarm_arrow2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/personal_item_arrow"/>
+
+        <TextView
+            android:id="@+id/tv_alarm_time_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="5dp"
+            android:layout_toLeftOf="@id/tv_alarm_arrow2"
+            android:textColor="@color/black_33"/>
+
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line_and_outline_grey"/>
+
+    <RelativeLayout
+        android:id="@+id/rl_day"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="20dp">
+
+        <TextView
+            android:id="@+id/tv_alarm_day"
+            android:layout_alignParentLeft="true"
+            android:text="반복"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content" />
+
+        <TextView
+            android:id="@+id/tv_alarm_arrow3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/personal_item_arrow"/>
+
+        <TextView
+            android:id="@+id/tv_alarm_day_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="5dp"
+            android:layout_toLeftOf="@id/tv_alarm_arrow3"
+            android:textColor="@color/black_33"/>
+
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line_and_outline_grey"/>
+
+
+    <Button
+        android:id="@+id/btn_alarm_setting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:text="알림 등록"
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp"/>
+    <!--
+    <Button
+        android:id="@+id/btn_loc_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="위치" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line_and_outline_grey"/>
+
+    <Button
+        android:id="@+id/btn_time_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="시간 다이얼로그 보이기" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/line_and_outline_grey"/>
+
+    <Button
+        android:id="@+id/btn_day_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="시간 다이얼로그 보이기" />-->
+
+
+
+</LinearLayout>
+
+

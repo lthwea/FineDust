@@ -36,7 +36,7 @@ public class MapConst {
     public static Map<String, MarkerVO> markerMap = new HashMap<String, MarkerVO>(){
         {
 
-            put("충북단양군",new MarkerVO("충북","단양군",new LatLng(  36.9845473,128.3655186)) );
+            put("충북단양군",new MarkerVO("충북","단양군",new LatLng( 36.9845473,128.3655186)) );
             put("충북옥천군",new MarkerVO("충북","옥천군",new LatLng(  36.3063646,127.5712809)) );
             put("충북제천시",new MarkerVO("충북","제천시",new LatLng(  37.1325821,128.1909481)) );
             put("충북진천군",new MarkerVO("충북","진천군",new LatLng(  36.8553798,127.4361117)) );
