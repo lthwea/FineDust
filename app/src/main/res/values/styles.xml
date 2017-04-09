@@ -3,9 +3,10 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/color_default_color2</item>
+        <item name="colorPrimaryDark">@color/color_default_color1</item>
+        <item name="colorAccent">@color/color_default_color2</item>
+
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -20,44 +21,46 @@
 
 
 
-
-
-
-
-    <!-- 알림  -->
-    <style name="FullScreenDialog" parent="android:Theme.Dialog">
-
-        <!-- 窗口设为无标题 -->
-        <item name="android:windowNoTitle">true</item>
-
-        <!-- 窗口浮现在activity之上 -->
-        <item name="android:windowIsFloating">false</item>
-
-        <!-- 背景透明 -->
-        <item name="android:windowBackground">@color/title_transparent_black</item>
-
-        <!-- 背景模糊 -->
-        <item name="android:backgroundDimEnabled">true</item>
-
-        <!-- 半透明 -->
-        <item name="android:windowIsTranslucent">true</item>
-
-        <!-- 边框 -->
-        <item name="android:windowFrame">@null</item>
-
-        <!-- 全屏 -->
-        <item name="android:windowFullscreen">false</item>
-    </style>
-
     <style name="horizontal_line_style">
         <item name="android:background">@color/line_and_outline_grey</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">0.4dp</item>
     </style>
 
+
+
+    <!-- 알림  -->
+    <style name="FullScreenDialog" parent="android:Theme.Dialog">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowBackground">@color/title_transparent_black</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowFullscreen">false</item>
+    </style>
+
+
+
     <style name="Theme_dialog" parent="@android:style/Theme.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
+    </style>
+
+
+
+
+    <!-- 구글맵 icon generator-->
+    <style name="iconGenTextSingle">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="iconGenTextCluster">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
 

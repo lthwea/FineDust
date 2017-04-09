@@ -6,7 +6,15 @@
 
 
 
-    <color name="color_default_color">#009966</color>
+    <color name="color_default_color1">#008266</color>
+    <color name="color_default_color2">#009966</color>
+
+
+
+    <color name="color_dust_1">#4E89F6</color>
+    <color name="color_dust_2">#5BD464</color>
+    <color name="color_dust_3">#FE7F41</color>
+    <color name="color_dust_4">#F94A4B</color>
 
 
 

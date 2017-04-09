@@ -13,6 +13,11 @@ import java.util.Map;
  */
 
 public class MapConst {
+
+    public static String CURRENT_DATA_DATE = "";
+    public static int CURRENT_MARKER_NUMBER = 0;
+
+
     /*
             04-03 16:27:08.755 12091-12091/com.lthwea.finedust D/defaultInfo: 경상남도	35.4606,128.2132
             04-03 16:27:09.383 12091-12091/com.lthwea.finedust D/defaultInfo: 부산광역시	35.1795543,129.0756416

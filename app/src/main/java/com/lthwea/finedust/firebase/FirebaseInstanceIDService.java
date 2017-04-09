@@ -1,8 +1,11 @@
+/*
 package com.lthwea.finedust.firebase;
 
+*/
 /**
  * Created by LeeTaeHun on 2017. 3. 30..
- */
+ *//*
+
 
 import android.util.Log;
 
@@ -53,4 +56,4 @@ public class FirebaseInstanceIDService extends FirebaseInstanceIdService {
         }
 
     }
-}
+}*/

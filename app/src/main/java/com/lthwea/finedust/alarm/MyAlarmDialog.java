@@ -15,7 +15,7 @@ import android.widget.TextView;
 
 import com.lthwea.finedust.R;
 
-public class SimpleDialog extends Dialog {
+public class MyAlarmDialog extends Dialog {
 
     protected static int default_width = WindowManager.LayoutParams.WRAP_CONTENT; // 기본 폭
     protected static int default_height = WindowManager.LayoutParams.WRAP_CONTENT;// 디폴트의 높이
@@ -32,8 +32,9 @@ public class SimpleDialog extends Dialog {
     ImageView icon;
 
 
-    public SimpleDialog(Context context, int style) {
+    public MyAlarmDialog(Context context, int style) {
         super(context, R.style.FullScreenDialog);
+
         mContext = context;
         customView = LayoutInflater.from(context).inflate(R.layout.alarm_dialog_simple, null);
 
@@ -45,6 +46,7 @@ public class SimpleDialog extends Dialog {
         dialog_message = (EditText) customView.findViewById(R.id.dialog_message);
         dialog_message.clearFocus();
         bt_confirm = (Button) customView.findViewById(R.id.dialog_confirm);
+
     }
 
     @Override
@@ -63,23 +65,23 @@ public class SimpleDialog extends Dialog {
         //ButterKnife.bind(this,customView);
     }
 
-    public SimpleDialog setClickListener(View.OnClickListener listener) {
+    public MyAlarmDialog setClickListener(View.OnClickListener listener) {
         this.listener = listener;
         bt_confirm.setOnClickListener(listener);
         return this;
     }
 
-    public SimpleDialog setMessage(String message) {
+    public MyAlarmDialog setMessage(String message) {
         dialog_message.setText(message);
         return this;
     }
 
-    public SimpleDialog setTitle(String title) {
+    public MyAlarmDialog setTitle(String title) {
         dialog_title.setText(title);
         return this;
     }
 
-    public SimpleDialog setIcon(int iconResId) {
+    public MyAlarmDialog setIcon(int iconResId) {
         dialog_title.setVisibility(View.GONE);
         icon.setVisibility(View.VISIBLE);
         icon.setBackgroundResource(iconResId);

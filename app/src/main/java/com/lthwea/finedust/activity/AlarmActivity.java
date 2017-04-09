@@ -1,12 +1,11 @@
 package com.lthwea.finedust.activity;
 
-import android.app.Activity;
-import android.app.Dialog;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
@@ -14,25 +13,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.NumberPicker;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.lthwea.finedust.R;
+import com.lthwea.finedust.alarm.MyAlarmReceiver;
+import com.lthwea.finedust.controller.PrefController;
+import com.lthwea.finedust.util.Utils;
+
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.Iterator;
 import java.util.List;
-
-import com.google.android.gms.maps.model.LatLng;
-import com.lthwea.finedust.R;
-import com.lthwea.finedust.alarm.AlarmManagerUtil;
-import com.lthwea.finedust.cnst.MapConst;
-import com.lthwea.finedust.vo.MarkerVO;
 
 /**
  * Created by LeeTaeHun on 2017. 4. 7..
@@ -43,13 +38,28 @@ public class AlarmActivity extends AppCompatActivity
 
     TextView tv_alarm_loc_value, tv_alarm_time_value, tv_alarm_day_value;
 
-    private RelativeLayout rl_loc, rl_time, rl_day;
-
     private String ALARM_LOCATION = "";
+    private String ALARM_TIME = "";         // NN:NN
     private int ALARM_HOUR = 0;
     private int ALARM_MIN = 0;
     private String ALARM_DAY = "";
-    private String ALARM_PM10VALUE = "";
+
+
+    private PrefController pref;
+    Button btn_alarm_setting;
+
+    RelativeLayout rl_loc, rl_time, rl_day;
+
+    // String array for alert dialog multi choice items
+    final String[] days = new String[]{
+            "월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"
+            //0,       1,       2,       3,       4,      5,     6,
+    };
+
+    // Boolean array for initial selected items
+    final boolean[] checkedDays = new boolean[]{
+            false,false,false,false,false,false,false
+    };
 
     @Override
 
@@ -64,11 +74,7 @@ public class AlarmActivity extends AppCompatActivity
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle("미세먼지 알림 설정");
 
-       /* 상태바, 타이틀바 */
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().setStatusBarColor(getResources().getColor(R.color.color_default_color));
-            getSupportActionBar().setBackgroundDrawable(getDrawable(R.color.color_default_color));
-        }
+
 
 
         tv_alarm_loc_value = (TextView) findViewById(R.id.tv_alarm_loc_value);
@@ -76,18 +82,8 @@ public class AlarmActivity extends AppCompatActivity
         tv_alarm_day_value = (TextView) findViewById(R.id.tv_alarm_day_value);
 
 
-
-        Intent i = getIntent();
-        ALARM_LOCATION= i.getStringExtra("ALARM_LOCATION");
-        Log.d("ALARM_LOCATION", ALARM_LOCATION+ "   !!!   !!");
-
-
-        checkAlarmData();
-
-
-
-
-        findViewById(R.id.rl_loc).setOnClickListener(new View.OnClickListener(){
+        rl_loc = (RelativeLayout) findViewById(R.id.rl_loc);
+        rl_loc.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 Intent i = new Intent();
@@ -97,7 +93,8 @@ public class AlarmActivity extends AppCompatActivity
             }
         });
 
-        findViewById(R.id.rl_time).setOnClickListener(new View.OnClickListener() {
+        rl_time = (RelativeLayout)findViewById(R.id.rl_time);
+        rl_time.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int hour, minute;
@@ -110,7 +107,8 @@ public class AlarmActivity extends AppCompatActivity
 
         });
 
-        findViewById(R.id.rl_day).setOnClickListener(new View.OnClickListener(){
+        rl_day = (RelativeLayout)findViewById(R.id.rl_day);
+        rl_day.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 popDayDialog();
@@ -118,16 +116,127 @@ public class AlarmActivity extends AppCompatActivity
         });
 
 
-        findViewById(R.id.btn_alarm_setting).setOnClickListener(new View.OnClickListener(){
+        btn_alarm_setting = (Button) findViewById(R.id.btn_alarm_setting);
+        btn_alarm_setting.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                alarmSetting();
+                if(pref.isAlarmUse()){
+                    cancelAlarm();      //삭제
+                }else{
+                    setAlarm();         //등록
+                }
             }
         });
 
 
 
+
+
+        pref = new PrefController(this);
+        if( !pref.isAlarmUse()){
+            btn_alarm_setting.setText("알림 등록");
+            rl_loc.setClickable(true);
+            rl_time.setClickable(true);
+            rl_day.setClickable(true);
+
+            findViewById(R.id.tv_alarm_arrow1).setVisibility(View.VISIBLE);
+            findViewById(R.id.tv_alarm_arrow2).setVisibility(View.VISIBLE);
+            findViewById(R.id.tv_alarm_arrow3).setVisibility(View.VISIBLE);
+
+            Intent i = getIntent();
+            ALARM_LOCATION = i.getStringExtra("ALARM_LOCATION");
+            Log.d("ALARM_LOCATION", ALARM_LOCATION+ "   !!!   !!");
+
+        }else{
+            btn_alarm_setting.setText("알림 삭제");
+            rl_loc.setClickable(false);
+            rl_time.setClickable(false);
+            rl_day.setClickable(false);
+
+            findViewById(R.id.tv_alarm_arrow1).setVisibility(View.INVISIBLE);
+            findViewById(R.id.tv_alarm_arrow2).setVisibility(View.INVISIBLE);
+            findViewById(R.id.tv_alarm_arrow3).setVisibility(View.INVISIBLE);
+
+            ALARM_LOCATION = pref.getPrefIAlarmLocation();
+            ALARM_TIME = pref.getPrefAlarmTime();
+            ALARM_DAY = pref.getPrefIAlarmDay();
+
+        }
+
+
+
+        checkAlarmData();
+
     }
+
+
+
+
+
+    public void setAlarm(){
+
+        //유효성체크
+        boolean isValid = checkAlarmData();
+        if(isValid) {
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("미세먼지 알림");
+            builder.setCancelable(true);
+            builder.setMessage("알림을 등록하시겠습니까?");
+            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+
+                    Intent i = new Intent(getApplicationContext(), MyAlarmReceiver.class);
+                    i.putExtra("location", ALARM_LOCATION);
+                    i.putExtra("week", checkedDays);
+
+
+                    PendingIntent pi = PendingIntent.getBroadcast(getApplicationContext(), 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
+                    AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+
+
+                    /*Calendar calendar = Calendar.getInstance();
+                    calendar.set(Calendar.HOUR_OF_DAY, ALARM_HOUR);
+                    calendar.set(Calendar.MINUTE, ALARM_MIN);
+                    calendar.set(Calendar.SECOND, 0);
+                    calendar.set(Calendar.MILLISECOND, 0);*/
+                    //alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
+
+                    if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ){
+                        Log.d("ExactAndAllowWhileIdle", "등록");
+                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
+                    }
+                    else if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT ){
+                        alarmManager.setExact(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
+                    }
+                    else{
+                        alarmManager.set(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
+                    }
+
+                    Log.d("setAlarm" ,ALARM_LOCATION + "," + ALARM_HOUR + "," + ALARM_MIN + "," + ALARM_DAY + " 알림 설정 ");
+
+                    ALARM_TIME = Integer.toString(ALARM_HOUR) + ":" + Integer.toString(ALARM_MIN);
+                    pref.setPrefAlarm(ALARM_LOCATION, ALARM_TIME, ALARM_DAY);
+                    pref.setIsAlarmUse(true);
+                    Toast.makeText(getApplicationContext(), "알림 설정이 완료되었습니다. ", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+            });
+            builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+            builder.show();
+
+        }else{
+            Toast.makeText(this, "데이터를 선택하세요.", Toast.LENGTH_LONG).show();
+        }
+
+    }
+
 
 
     public boolean checkAlarmData(){
@@ -135,21 +244,22 @@ public class AlarmActivity extends AppCompatActivity
         boolean isValid = true;
 
         if(ALARM_LOCATION == null || "".equals(ALARM_LOCATION) || "-".equals(ALARM_LOCATION)){
-            tv_alarm_loc_value.setText("-");
+            tv_alarm_loc_value.setText("");
             isValid = false;
         }else{
             tv_alarm_loc_value.setText(ALARM_LOCATION);
         }
 
-        if(ALARM_HOUR == 0 && ALARM_MIN == 0){
+        if(ALARM_TIME == null || "".equals(ALARM_TIME) || "-".equals(ALARM_TIME)){
+            tv_alarm_time_value.setText("");
             isValid = false;
-            tv_alarm_time_value.setText("-");
         }else{
-            tv_alarm_time_value.setText( ALARM_HOUR + " : " + ALARM_MIN);
+            tv_alarm_time_value.setText(ALARM_TIME);
         }
 
+
         if(ALARM_DAY == null || "".equals(ALARM_DAY) || "-".equals(ALARM_DAY)){
-            tv_alarm_day_value.setText("-");
+            tv_alarm_day_value.setText("");
             isValid = false;
         }else{
             tv_alarm_day_value.setText(ALARM_DAY);
@@ -161,147 +271,6 @@ public class AlarmActivity extends AppCompatActivity
     }
 
 
-    public void alarmSetting(){
-
-        setClock();
-
-        //유효성체크
-        boolean isValid = checkAlarmData();
-        if(isValid) {
-
-            //알림설정
-
-
-
-        }
-
-
-
-
-
-
-    }
-
-
-    /**
-     * @param flag            신고주기적인 시간 간격,flag = 0 그것은 한 번 알람을 나타냅니다, flag = 1 매일 알람 시계의 알림을 나타냅니다(일일 간격),
-     *                        flag = 2 표현 알람 시계 주에 주를 상기시켜（일주의주기적인 간격）
-     * @param hour            시
-     * @param minute          분
-     * @param id              알람 시계 ID
-     * @param week            week=0 일 경보에 또는 주기적 따라 시간 알람을 나타냅니다，0이 아니면 매주 정기 간행물에 대한주의 경보를 대신 몇 가지 경우
-     * @param tips            알람 메시지
-     * @param soundOrVibrator 도 2는 음성을 나타내는 진동을 실행한다，1은 단지 벨소리를 생각 나게，0은 진동을 의미
-    setAlarm(Context context, int flag, int hour, int minute, int id, int week, String tips, int soundOrVibrator)
-     */
-    private void setClock() {
-
-        AlarmManagerUtil.setAlarm(this, 1, 18, 20, 0, 0, "알람 시계 울렸다", 2);
-        Toast.makeText(this, "알람 설정 성공", Toast.LENGTH_LONG).show();
-
-        /*if (time != null && time.length() > 0) {
-
-            String[] times = time.split(":");
-
-            if (cycle == 0) {//알람 시계는 매일인가
-                AlarmManagerUtil.setAlarm(this, 0, Integer.parseInt(times[0]), Integer.parseInt(times[1]), 0, 0, "알람 시계 울렸다", ring);
-            }
-
-            if(cycle == -1){//알람 시계는 한 번만 울렸다
-                AlarmManagerUtil.setAlarm(this, 1, Integer.parseInt(times[0]), Integer.parseInt (times[1]), 0, 0, "알람 시계 울렸다", ring);
-            }else {//객관식, 알람 시계 몇 주
-
-                String weeksStr = parseRepeat(cycle, 1);
-                String[] weeks = weeksStr.split(",");
-                for (int i = 0; i < weeks.length; i++) {
-                    AlarmManagerUtil.setAlarm(this, 2,
-                            Integer.parseInt(times[0]), Integer.parseInt(times[1]), i, Integer.parseInt(weeks[i]), "알람 시계 울렸다", ring);
-                }
-
-            }
-
-        }*/
-
-    }
-
-/*
-
-    */
-/**
-     * @param repeat 진 클럭 사이클을 구문 분석
-     * @param flag   flag=중국 문자 0을 반환 월요일，周二cycle等，flag=1,반환weeks(1,2,3)
-     * @return
-     *//*
-
-    public static String parseRepeat(int repeat, int flag) {
-        String cycle = "";
-        String weeks = "";
-        if (repeat == 0) {
-            repeat = 127;
-        }
-        if (repeat % 2 == 1) {
-            cycle = "월요일";
-            weeks = "1";
-        }
-        if (repeat % 4 >= 2) {
-            if ("".equals(cycle)) {
-                cycle = "화요일";
-                weeks = "2";
-            } else {
-                cycle = cycle + "," + "화요일";
-                weeks = weeks + "," + "2";
-            }
-        }
-        if (repeat % 8 >= 4) {
-            if ("".equals(cycle)) {
-                cycle = "수요일";
-                weeks = "3";
-            } else {
-                cycle = cycle + "," + "수요일";
-                weeks = weeks + "," + "3";
-            }
-        }
-        if (repeat % 16 >= 8) {
-            if ("".equals(cycle)) {
-                cycle = "목요일";
-                weeks = "4";
-            } else {
-                cycle = cycle + "," + "목요일";
-                weeks = weeks + "," + "4";
-            }
-        }
-        if (repeat % 32 >= 16) {
-            if ("".equals(cycle)) {
-                cycle = "금요일";
-                weeks = "5";
-            } else {
-                cycle = cycle + "," + "금요일";
-                weeks = weeks + "," + "5";
-            }
-        }
-        if (repeat % 64 >= 32) {
-            if ("".equals(cycle)) {
-                cycle = "토요일";
-                weeks = "6";
-            } else {
-                cycle = cycle + "," + "토요일";
-                weeks = weeks + "," + "6";
-            }
-        }
-        if (repeat / 64 == 1) {
-            if ("".equals(cycle)) {
-                cycle = "일요일";
-                weeks = "7";
-            } else {
-                cycle = cycle + "," + "일요일";
-                weeks = weeks + "," + "7";
-            }
-        }
-
-        return flag == 0 ? cycle : weeks;
-    }
-
-*/
 
 
     @Override
@@ -322,6 +291,7 @@ public class AlarmActivity extends AppCompatActivity
         public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
             ALARM_HOUR = hourOfDay;
             ALARM_MIN = minute;
+            ALARM_TIME = Integer.toString(ALARM_HOUR) + ":" + Integer.toString(ALARM_MIN);
             checkAlarmData();
             //Toast.makeText(AlarmActivity.this, msg, Toast.LENGTH_SHORT).show();
         }
@@ -330,16 +300,7 @@ public class AlarmActivity extends AppCompatActivity
 
 
 
-    // String array for alert dialog multi choice items
-    final String[] days = new String[]{
-            "월요일", "화요일", "수요일", "목요일", "금요일", "토요알", "일요일"
-            //0,    1,   2,   3,    4,    5,   6,
-    };
 
-    // Boolean array for initial selected items
-    final boolean[] checkedDays = new boolean[]{
-            false,false,false,false,false,false,false
-    };
 
 
     public void popDayDialog() {
@@ -401,6 +362,47 @@ public class AlarmActivity extends AppCompatActivity
     }
 
 
+
+
+
+
+    public void cancelAlarm() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("미세먼지 알림");
+        builder.setCancelable(true);
+        builder.setMessage("알림을 삭제하시겠습니까?");
+        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                AlarmManager am = (AlarmManager)getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                Intent intent = new Intent(getApplicationContext(), MyAlarmReceiver.class);
+                PendingIntent sender = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                if (sender != null) {
+                    am.cancel(sender);
+                    sender.cancel();
+                }
+
+                ALARM_LOCATION = "";
+                ALARM_DAY = "";
+                ALARM_TIME = "";
+                pref.setIsAlarmUse(false);
+                pref.setPrefAlarm("", "", "");
+                Toast.makeText(getApplicationContext(), "알림 삭제가 완료되었습니다. ", Toast.LENGTH_LONG).show();
+                finish();
+            }
+        });
+        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        builder.show();
+
+
+
+    }
 
 
 

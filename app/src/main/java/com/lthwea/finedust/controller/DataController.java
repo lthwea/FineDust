@@ -1,5 +1,7 @@
 package com.lthwea.finedust.controller;
 
+import android.util.Log;
+
 import com.lthwea.finedust.cnst.MapConst;
 import com.lthwea.finedust.vo.MarkerVO;
 
@@ -164,7 +166,7 @@ public class DataController {
         HttpURLConnection urlConnection = null;
 
         try {
-            URL url = new URL("http://dopewealth.com/finedust?key=1234");
+            URL url = new URL("http://dopewealth.com/finedust?key=1234&action=getData");
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.connect();
 
@@ -183,12 +185,16 @@ public class DataController {
                 JSONArray jsonArray = (JSONArray) jar.get(i);
 
                 for(int j = 0 ; j < jsonArray.length() ; j++){
-
                     JSONObject tmp = (JSONObject) jsonArray.get(j);
                     String key = tmp.get("sidoName")+ "" +tmp.get("cityName");
-
                     MarkerVO vo = MapConst.markerMap.get(key);
                     vo.setPm10Value((String) tmp.get("pm10Value"));
+                    vo.setPm25Value((String) tmp.get("pm25Value"));
+                    vo.setSo2Value((String) tmp.get("so2Value"));
+                    vo.setO3Value((String) tmp.get("o3Value"));
+                    vo.setNo2Value((String) tmp.get("no2Value"));
+                    vo.setCoValue((String) tmp.get("coValue"));
+                    vo.setDataTime((String) tmp.get("dataTime"));
                     MapConst.markerMap.put(key, vo);
                 }
             }
@@ -200,6 +206,73 @@ public class DataController {
             if(urlConnection != null){
                 urlConnection.disconnect();
             }
+        }
+
+    }
+
+
+    public String getAlarmData(String sido, String city) {
+
+        HttpURLConnection urlConnection = null;
+        String cityName = "", pm10Value= "", dateTime="";
+        String pm25Value = "";
+//        String so2Value;
+//        String o3Value;
+//        String no2Value;
+//        String coValue;
+//        String dataTime;
+        String returnStr = "";
+
+        try {
+            URL url = new URL("http://dopewealth.com/finedust?key=1234&action=alarmData&value="+sido);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.connect();
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+            br.close();
+
+            JSONObject jsonObject = new JSONObject(sb.toString());
+            JSONArray jArray = (JSONArray) jsonObject.get("list");
+
+
+            boolean isExistData = false;
+            for(int i = 0 ; i < jArray.length() ; i++){
+                JSONObject tmp = (JSONObject) jArray.get(i);
+                Log.d("JSON", tmp.toString());
+                cityName = (String) tmp.get("cityName");
+                if(city.equals(cityName)){
+                    pm10Value = (String) tmp.get("pm10Value");
+                    pm25Value = (String) tmp.get("pm25Value");
+                    dateTime = (String) tmp.get("dataTime");
+                    Log.d("getAlarmData", cityName +","+ pm10Value + "," + pm25Value + "," + dateTime);
+                    isExistData = true;
+                    break;
+                }else{
+                    isExistData = false;
+                }
+            }
+
+            if(isExistData){
+                returnStr = pm10Value + "," + pm25Value + "," + dateTime;
+            }else{
+                returnStr = "";
+            }
+
+        }catch( Exception e) {
+            e.printStackTrace();
+            returnStr = "";
+        }
+        finally {
+            if(urlConnection != null){
+                urlConnection.disconnect();
+            }
+
+            return returnStr;
         }
 
     }

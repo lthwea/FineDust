@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FineDust</string>
+    <string name="app_name">전국미세먼지</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -19,6 +19,13 @@
 
     <!-- 알림 등록을 위한 pref String -->
     <string name="pref_alarm_use">alarm_use</string>
+    <string name="pref_alarm_location">alarm_location</string>
+    <string name="pref_alarm_time">alarm_time</string>
+    <string name="pref_alarm_day">alarm_day</string>
+
+
+
+    <string name="banner_ad_unit_id">ca-app-pub-3655876992422407/2505666979</string>
 
 
 </resources>
