@@ -1,30 +1,7 @@
 package com.lthwea.finedust.activity;
 
-import android.app.ListActivity;
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.Switch;
-import android.widget.TextView;
-
-import com.lthwea.finedust.vo.AlarmVO;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import com.lthwea.finedust.R;
 
@@ -38,7 +15,7 @@ public class AlarmListActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.alarm_list_activity);
-        setContentView(R.layout.activity_alarm2);
+        setContentView(R.layout.activity_alarm);
 
         // back button
         android.support.v7.app.ActionBar actionBar = getSupportActionBar();

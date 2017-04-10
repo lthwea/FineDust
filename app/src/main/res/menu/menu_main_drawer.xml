@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="지도 데이터">
+        <menu>
+            <item
+            android:id="@+id/mn_dust"
+            android:icon="@drawable/ic_dust"
+            android:title="미세먼지" />
+
+            <item
+            android:id="@+id/mn_su_dust"
+            android:icon="@drawable/ic_su_dust"
+            android:title="초미세먼지" />
+        </menu>
+    </item>
+
+    <item android:title="설정">
+        <menu>
+            <item
+                android:id="@+id/mn_alarm"
+                android:icon="@drawable/ic_alarm"
+                android:title="미세먼지알림" />
+            <item
+                android:id="@+id/mn_location"
+                android:icon="@drawable/ic_marker"
+                android:title="시작위치설정" />
+        </menu>
+    </item>
+
+    <item android:title="정보">
+        <menu>
+            <item
+                android:id="@+id/mn_license"
+                android:icon="@drawable/ic_info"
+                android:title="데이터정보" />
+        </menu>
+    </item>
+
+</menu>

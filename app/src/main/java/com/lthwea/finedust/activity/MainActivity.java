@@ -14,8 +14,6 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -31,11 +29,10 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -65,12 +62,13 @@ import java.util.List;
 
 import static android.os.Build.VERSION_CODES.M;
 import static com.lthwea.finedust.R.id.map;
+import static com.lthwea.finedust.util.Utils.getNearDistanceLocation;
 
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
 //        GoogleMap.OnMapClickListener,
-        GoogleMap.OnCameraMoveStartedListener,
+//        GoogleMap.OnCameraMoveStartedListener,
 //        GoogleMap.OnCameraIdleListener,
 //        GoogleMap.OnCameraMoveCanceledListener,
 //        GoogleApiClient.ConnectionCallbacks,
@@ -83,23 +81,30 @@ public class MainActivity extends AppCompatActivity
         ClusterManager.OnClusterItemInfoWindowClickListener<MarkerVO> {
 
 
+    public boolean isDustType = true;   // ture:미세먼지정보,  false:초미세먼지정보
+
+
     private GoogleMap mMap;
     private Geocoder geocoder;
     private ClusterManager<MarkerVO> mClusterManager;
-    private int DEFAULT_MIN_ZOOM_LEVEL = 13;
-
+    private int DEFAULT_MIN_ZOOM_LEVEL = 12;
+    private int DEFAULT_MYLOCATION_ZOOM_LEVEL = 13;
 
     private Marker initMarker;
     private boolean isSettingInitMarker = false;
-
     private Marker alarmMarker;
     private boolean isSettingAlarmMarker = false;
 
 
     private PrefController pref;
-    private Toolbar toolbar;
-
     public static int INTENT_ALARM_CODE = 0;
+
+
+    private Toolbar toolbar;
+    public int actionBarHeight;
+    public LinearLayout ll_status;
+
+
 
 //    private long APP_RUN_TIME_MILLIS = 0;
 
@@ -112,9 +117,19 @@ public class MainActivity extends AppCompatActivity
 
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle("전국미세먼지");
+        toolbar.setTitle("전국 미세먼지 정보");
         setSupportActionBar(toolbar);
 
+
+        TypedValue tv = new TypedValue();
+        actionBarHeight = 0;
+        if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+            actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data, getResources().getDisplayMetrics());
+        }
+
+        // 상태바 툴바 밑으로
+        ll_status = (LinearLayout) findViewById(R.id.ll_status);
+        ll_status.setPadding(0, actionBarHeight, 0, 0);
 
 
         //MobileAds.initialize(getApplicationContext(), "ca-app-pub-3655876992422407~1028933775");
@@ -123,48 +138,23 @@ public class MainActivity extends AppCompatActivity
 //        mAdView.loadAd(adRequest);
 
 
-
-        //getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0x006D05));
-
         Log.d("MainActivity", "onCreate: call");
 
-        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-
-        /*navigationView.setOnClickListener(new View.OnClickListener(){
-
-            @Override
-            public void onClick(View v) {
-                Log.d("navigationView","onclick");
-
-                int size = navigationView.getMenu().size();
-                for (int i = 0; i < size; i++) {
-                    navigationView.getMenu().getItem(i).setChecked(false);
-                }
-            }
-        });*/
+        if(isDustType) navigationView.getMenu().getItem(0).setChecked(true);
+        else           navigationView.getMenu().getItem(1).setChecked(true);
 
         // firebase FCM
        /* FirebaseMessaging.getInstance().subscribeToTopic("news");
         FirebaseInstanceId.getInstance().getToken();*/
-
 
         // Google Map current My location Perminssion check
         if (android.os.Build.VERSION.SDK_INT >= M) {
@@ -178,20 +168,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             Toast.makeText(getApplicationContext(), "ERROR : mapFragment is null", Toast.LENGTH_SHORT).show();
         }
-
-        //주소로 위도경도 구하기
-        geocoder = new Geocoder(this);
-
-
-
-       /* for(int i = 0; i < MapConst.testList.size() ; i++){
-
-            String tmp = (String) MapConst.testList.get(i);
-            Address adr = getAddress(tmp);
-            String[] tmp2 = tmp.split(" ");
-            Log.d("getLatLng",  "put(\""+ tmp2[0] + tmp2[1] + "\"," + "new MarkerVO(\"" + tmp2[0] + "\",\"" + tmp2[1] + "\",new LatLng(  " + adr.getLatitude() + "," + adr.getLongitude() + ")) );" );
-
-        }*/
 
 
         //Network 사용 모드
@@ -210,6 +186,16 @@ public class MainActivity extends AppCompatActivity
         }
 
 
+       /* for(int i = 0; i < MapConst.testList.size() ; i++){
+
+            String tmp = (String) MapConst.testList.get(i);
+            Address adr = getAddress(tmp);
+            String[] tmp2 = tmp.split(" ");
+            Log.d("getLatLng",  "put(\""+ tmp2[0] + tmp2[1] + "\"," + "new MarkerVO(\"" + tmp2[0] + "\",\"" + tmp2[1] + "\",new LatLng(  " + adr.getLatitude() + "," + adr.getLongitude() + ")) );" );
+
+        }*/
+
+
     }
 
     @Override
@@ -217,15 +203,10 @@ public class MainActivity extends AppCompatActivity
         Log.d("  MainActivity", "onMapReady: call");
 
         mMap = googleMap;
+        mMap.setPadding(0, actionBarHeight + 30 , 0, 0);
 
-        //현재 위치 아이콘 안보여서 밑으로 내림
-        TypedValue tv = new TypedValue();
-        int actionBarHeight = 0;
-        if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
-            actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data, getResources().getDisplayMetrics());
-        }
-        mMap.setPadding(0, actionBarHeight, 0, 0);
-
+        //주소로 위도경도 구하기
+        geocoder = new Geocoder(this);
 
         //  xx동수준 줌 레벨 제한
         mMap.setMaxZoomPreference(DEFAULT_MIN_ZOOM_LEVEL);
@@ -246,6 +227,7 @@ public class MainActivity extends AppCompatActivity
         googleMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
             public void onCameraIdle() {
+                Log.d("onCameraIdle", "aa");
                 CameraPosition position = mMap.getCameraPosition();
                 if (mPreviousCameraPosition[0] == null || mPreviousCameraPosition[0].zoom != position.zoom) {
                     mPreviousCameraPosition[0] = mMap.getCameraPosition();
@@ -305,7 +287,7 @@ public class MainActivity extends AppCompatActivity
     protected void onRestart() {
         super.onRestart();
         Log.d("onRestart", "..");
-        addItems();
+        //addItems();
     }
 
     private void addItems() {
@@ -331,30 +313,7 @@ public class MainActivity extends AppCompatActivity
         MapConst.CURRENT_DATA_DATE     = (String) (MapConst.markerMap.get("서울강남구").getDataTime());
         MapConst.CURRENT_MARKER_NUMBER = norCnt;
 
- /*
-        mClusterManager.addItem(new MarkerVO(new LatLng(37.5665350,126.9779690), "서울1", "1", "10"));
-        mClusterManager.addItem(new MarkerVO(new LatLng(37.6665350,126.9779690), "서울2", "1", "10"));
-        mClusterManager.addItem(new MarkerVO(new LatLng(37.6665350,126.9879690), "서울2", "1", "10"));
-        mClusterManager.addItem(new MarkerVO(new LatLng(37.6665350,126.9679690), "서울2", "1", "10"));
-        mClusterManager.addItem(new MarkerVO(new LatLng(37.6765350,126.9779690), "서울2", "1", "10"));
-      mClusterManager.addItem(new MarkerVO(new LatLng(35.8714350,128.6014450), "서울1", "2", "10"));
-        mClusterManager.addItem(new MarkerVO(new LatLng(35.1595450,126.8526010), "서울1", "3", "10"));
-        mClusterManager.addItem(new MarkerVO(new LatLng(33.4890110,126.4983020), "서울1", "4", "10"));
-        mClusterManager.addItem(new MarkerVO(new LatLng(37.8699840,127.7433860), "서울1", "5", "10"));
-        mClusterManager.addItem(new MarkerVO(new LatLng(37.4138000,127.5183000), "경기", "5", "10"));
-        mClusterManager.addItem(new MarkerVO(new LatLng(37.2635730,127.0286010), "수원", "5", "10"));
-*/
-
     }
-
-
-    //          set Toolbar Title
-    @Override
-    public void onCameraMoveStarted(int i) {
-
-
-    }
-
 
 
 
@@ -373,7 +332,7 @@ public class MainActivity extends AppCompatActivity
 
         // Inflate the menu; this adds items to the action bar if it is present.
         //search view로 수정
-        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.menu_search_toolbar, menu);
         final SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_settings));
         SearchManager searchManager = (SearchManager) getSystemService(SEARCH_SERVICE);
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
@@ -453,6 +412,7 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
         // Handle navigation view item clicks here.
         int id = item.getItemId();
@@ -499,9 +459,7 @@ public class MainActivity extends AppCompatActivity
                 builder.show();
 
 
-                Toast.makeText(getApplicationContext(), "실행중 입니다.", Toast.LENGTH_SHORT).show();
-
-
+                //Toast.makeText(getApplicationContext(), "실행중 입니다.", Toast.LENGTH_SHORT).show();
             }
 
         } else if (id == R.id.mn_license) {
@@ -529,11 +487,75 @@ public class MainActivity extends AppCompatActivity
                     });
             alertDialog.show();
 
+        }else if (id == R.id.mn_dust || id == R.id.mn_su_dust){
+            if(isSettingAlarmMarker){
+                stopAlarmMarekrInMap();
+            }
+
+            if(isSettingInitMarker){
+                stopInitLocationInMap();
+            }
+
+            if(id == R.id.mn_dust){
+                if(isDustType == false){
+                    isDustType = true;
+                    toolbar.setTitle("전국 미세먼지 정보");
+                    showToast("전국 미세먼지 정보입니다.");
+                    updateClusterManager();
+                    changeTextViewStatus();
+                }else{
+                    showToast("미세먼지 데이터 사용중 입니다.");
+                }
+
+            }else if(id == R.id.mn_su_dust){
+                if(isDustType == true){
+                    isDustType = false;
+                    toolbar.setTitle("전국 초미세먼지 정보");
+                    showToast("전국 초미세먼지 정보입니다.");
+                    updateClusterManager();
+                    changeTextViewStatus();
+                }else{
+                    showToast("초미세먼지 데이터 사용중 입니다.");
+                }
+
+            }
+
+
+            drawer.closeDrawer(GravityCompat.START);
+            return true;
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return false;
+
+    }
+
+    public void updateClusterManager(){
+
+        mClusterManager.clearItems();
+        mMap.clear();
+        addItems();
+        mClusterManager.cluster();
+
+        LatLng defaultLatLng = new LatLng(pref.DEFAULT_LAT, pref.DEFAULT_LNG);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(defaultLatLng));
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo((float) 5.5);
+        mMap.animateCamera(zoom);
+
+
+
+        /*double zoomLevel = 0;
+        if( mMap.getCameraPosition().zoom + 2 >= DEFAULT_MIN_ZOOM_LEVEL){
+            zoomLevel = mMap.getCameraPosition().zoom - 2;
+        }else{
+            zoomLevel = mMap.getCameraPosition().zoom + 2;
+        }
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo( (float) zoomLevel);
+        mMap.animateCamera(zoom);*/
+
+
+
+
 
     }
 
@@ -663,10 +685,14 @@ public class MainActivity extends AppCompatActivity
 
     public void popInitMarkerDialog(final Double lat, final Double lng, final Double zoom) {
 
+        String loc = Utils.getNearDistanceLocation(lat, lng);
+        String msg = "현재 위치에서 가장 가까운 측정지인\n"+  loc + "를\n시작위치로 설정하시겠습니까?";
+
+
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("시작위치 설정");
         builder.setCancelable(true);
-        builder.setMessage("현재 위치를 시작위치로 설정하시겠습니까?");
+        builder.setMessage(msg);
         builder.setPositiveButton("설정", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -697,7 +723,7 @@ public class MainActivity extends AppCompatActivity
 
     public void popAlarmMarkerDialog(final Double lat, final Double lng) {
 
-        final String location = Utils.getNearDistanceLocation(lat, lng);
+        final String location = getNearDistanceLocation(lat, lng);
         Log.d("popAlarmMarkerDialog", location + "\t\t ....");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -723,7 +749,6 @@ public class MainActivity extends AppCompatActivity
         });
         builder.show();
     }
-
 
 
     /*
@@ -754,7 +779,7 @@ public class MainActivity extends AppCompatActivity
             if(myLocation!=null){
                 LatLng l = Utils.getNearDistanceLatLng(myLocation.getLatitude(), myLocation.getLongitude());
                 userLocation = new LatLng(l.latitude, l.longitude);
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, DEFAULT_MIN_ZOOM_LEVEL), null);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, DEFAULT_MYLOCATION_ZOOM_LEVEL), null);
             }
 
         }else {
@@ -812,7 +837,6 @@ public class MainActivity extends AppCompatActivity
 
 
 
-
     /**
      * Draws profile photos inside markers (using IconGenerator).
      * When there are multiple people in the cluster, draw multiple photos (using MultiDrawable).
@@ -856,9 +880,17 @@ public class MainActivity extends AppCompatActivity
             //markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(vo.getCityName());
 
            // String str = vo.getSidoName() + " " + vo.getCityName() + " " + vo.getPm10Value();
-            String str = vo.getCityName() + " " + vo.getPm10Value();
+            String str;
 
-            String val = vo.getPm10Value();
+            if(isDustType){
+                str  = vo.getCityName() + " " + vo.getPm10Value();
+            }else{
+                str  = vo.getCityName() + " " + vo.getPm25Value();
+            }
+
+
+
+            String val = isDustType == true ? vo.getPm10Value() : vo.getPm25Value();
             if (val != null && !"".equals(val)) {
                 mIconGenerator.setColor(getMarkerColor(Integer.parseInt(val)));
                 mIconGenerator.setTextAppearance(R.style.iconGenTextSingle);
@@ -909,7 +941,7 @@ public class MainActivity extends AppCompatActivity
             int cnt = 0;
             double avg = 0;
             for (MarkerVO v : cluster.getItems()) {
-                String val = v.getPm10Value();
+                String val = isDustType == true ? v.getPm10Value() : v.getPm25Value();
                 if (val != null && !"".equals(val)) {
                     sum += Integer.parseInt(val);
                     cnt++;
@@ -1012,6 +1044,10 @@ public class MainActivity extends AppCompatActivity
 //        }
 //
 //    }
+//    @Override
+//    public void onCameraMoveStarted(int i) {
+//
+//    }
 
     @Override
     public void onClusterItemInfoWindowClick(MarkerVO item) {
@@ -1112,6 +1148,30 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
+    public void changeTextViewStatus(){
+        TextView tv1 = (TextView) findViewById(R.id.tv_status1);
+        TextView tv2 = (TextView) findViewById(R.id.tv_status2);
+        TextView tv3 = (TextView) findViewById(R.id.tv_status3);
+        TextView tv4 = (TextView) findViewById(R.id.tv_status4);
+
+        if(isDustType){
+            tv1.setText("0~30(좋음)");
+            tv2.setText("31~80(보통)");
+            tv3.setText("81~150(나쁨)");
+            tv4.setText("151~(매우나쁨)");
+        }else{
+            tv1.setText("0~15(좋음)");
+            tv2.setText("16~50(보통)");
+            tv3.setText("51~100(나쁨)");
+            tv4.setText("100~(매우나쁨)");
+        }
+
+    }
+
+    public void showToast(String msg){
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
 }
 
 //동 -> 15
