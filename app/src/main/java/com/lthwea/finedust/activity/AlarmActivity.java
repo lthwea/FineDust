@@ -75,8 +75,6 @@ public class AlarmActivity extends AppCompatActivity
         actionBar.setTitle("미세먼지 알림 설정");
 
 
-
-
         tv_alarm_loc_value = (TextView) findViewById(R.id.tv_alarm_loc_value);
         tv_alarm_time_value = (TextView) findViewById(R.id.tv_alarm_time_value);
         tv_alarm_day_value = (TextView) findViewById(R.id.tv_alarm_day_value);
@@ -86,7 +84,7 @@ public class AlarmActivity extends AppCompatActivity
         rl_loc.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                Intent i = new Intent();
+                Intent i = getIntent();
                 i.putExtra("isSetLocation", "Y");
                 setResult(MainActivity.INTENT_ALARM_CODE, i);
                 finish();

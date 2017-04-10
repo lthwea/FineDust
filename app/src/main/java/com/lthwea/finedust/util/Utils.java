@@ -1,5 +1,7 @@
 package com.lthwea.finedust.util;
 
+import android.util.Log;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.lthwea.finedust.cnst.MapConst;
 import com.lthwea.finedust.vo.MarkerVO;
@@ -44,6 +46,90 @@ public class Utils {
 
         return nearDistanceLocation;
     }
+
+
+    public static LatLng getNearDistanceLatLng(double lat1, double lon1) {
+        LatLng nearDistanceLatLng = null;
+        double minDistance = 99999999999999999999.0;
+
+        Iterator<String> keys = MapConst.markerMap.keySet().iterator();
+
+        while ( keys.hasNext() ) {
+
+            String key = keys.next();
+            MarkerVO vo = MapConst.markerMap.get(key);
+
+            Log.d("getNearDistanceLatLng", key + "\t" + vo.getPm10Value() + " ");
+
+            if(vo.getPm10Value() == null || "".equals(vo.getPm10Value())){
+                continue;
+            }
+
+            LatLng l = vo.getPosition();
+            Double lat2 = l.latitude;
+            Double lon2 = l.longitude;
+            double theta = lon1 - lon2;
+            double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
+            dist = Math.acos(dist);
+            dist = rad2deg(dist);
+            dist = dist * 60 * 1.1515;
+            dist = dist * 1609.344;
+
+            if( minDistance > dist){
+                nearDistanceLatLng = l;
+                minDistance = dist;
+            }
+        }
+
+        return nearDistanceLatLng;
+    }
+
+    public static String getNearDistanceInfo(double lat1, double lon1) {
+        String msg = "";
+        MarkerVO infoVO = null;
+
+        double minDistance = 99999999999999999999.0;
+
+        Iterator<String> keys = MapConst.markerMap.keySet().iterator();
+
+        while ( keys.hasNext() ) {
+
+            String key = keys.next();
+            MarkerVO vo = MapConst.markerMap.get(key);
+
+            //Log.d("getNearDistanceLatLng", key + "\t" + vo.getPm10Value() + " ");
+
+            if(vo.getPm10Value() == null || "".equals(vo.getPm10Value())){
+                continue;
+            }
+
+            LatLng l = vo.getPosition();
+            Double lat2 = l.latitude;
+            Double lon2 = l.longitude;
+            double theta = lon1 - lon2;
+            double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
+            dist = Math.acos(dist);
+            dist = rad2deg(dist);
+            dist = dist * 60 * 1.1515;
+            dist = dist * 1609.344;
+
+            if( minDistance > dist){
+                infoVO = vo;
+                minDistance = dist;
+            }
+        }
+
+        if (infoVO != null){
+            msg = infoVO.getSidoName() + " " + infoVO.getCityName() + " 상세정보\n";
+            msg += "미세먼지 : " +infoVO.getPm10Value() +  "("+ Utils.getPm10ValueStatus(infoVO.getPm10Value()) + ")\n";
+            msg +=  "초미세먼지 : " +infoVO.getPm25Value() +  "("+ Utils.getPm25ValueStatus(infoVO.getPm25Value()) + ")\n";
+            msg += "기준 : " + infoVO.getDataTime();
+        }
+
+        return msg;
+    }
+
+
 
 
     // This function converts decimal degrees to radians

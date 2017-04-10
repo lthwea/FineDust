@@ -30,28 +30,28 @@
         android:layout_marginRight="10dp"
         android:layout_marginTop="20dp">
 
-    <TextView
-        android:id="@+id/tv_alarm_loc"
-        android:layout_alignParentLeft="true"
-        android:text="지역"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content" />
+        <TextView
+            android:id="@+id/tv_alarm_loc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="지역" />
 
-    <TextView
-        android:id="@+id/tv_alarm_arrow1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:background="@drawable/personal_item_arrow"/>
+        <TextView
+            android:id="@+id/tv_alarm_arrow1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/personal_item_arrow" />
 
-    <TextView
-        android:id="@+id/tv_alarm_loc_value"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_marginRight="5dp"
-        android:layout_toLeftOf="@id/tv_alarm_arrow1"
-        android:textColor="@color/black_33"/>
+        <TextView
+            android:id="@+id/tv_alarm_loc_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="5dp"
+            android:layout_toLeftOf="@id/tv_alarm_arrow1"
+            android:textColor="@color/black_33" />
 
     </RelativeLayout>
 
