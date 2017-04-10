@@ -66,7 +66,7 @@ public class AlarmActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_alarm);
+        setContentView(R.layout.activity_alarm2);
 
         // back button
         android.support.v7.app.ActionBar actionBar = getSupportActionBar();
