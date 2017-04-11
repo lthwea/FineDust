@@ -5,14 +5,11 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".activity.AlarmListActivity"
-    android:background="@color/grey"
-    android:layout_marginTop="20dp"
-    >
+    android:background="@color/grey">
 
 
 
     <RelativeLayout
-        android:id="@+id/rl_loc"
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:background="@color/white"
@@ -26,7 +23,7 @@
             android:background="@drawable/rounded"
             android:src="@mipmap/ic_keyboard_backspace_white_48dp"
             android:layout_centerVertical="true"
-            android:id="@+id/imageButton" />
+            android:id="@+id/ibtn_alarm_list_back" />
 
         <TextView
             android:id="@+id/tv_alarm_loc"
@@ -39,23 +36,22 @@
             android:textSize="25dp"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
+            android:layout_alignParentStart="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
 
         <ImageButton
+            android:id="@+id/ibtn_alarm_list_add"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@drawable/rounded"
-            android:src="@mipmap/ic_keyboard_backspace_white_48dp"
-            android:layout_alignTop="@+id/imageButton"
+            android:src="@mipmap/ic_add_white_36dp"
+            android:layout_alignTop="@+id/ibtn_alarm_list_back"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
             android:layout_marginRight="15dp" />
 
-
     </RelativeLayout>
-
-
-
 
 
     <ListView

@@ -2,22 +2,14 @@ package com.lthwea.finedust.alarm;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.os.Bundle;
-import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import com.lthwea.finedust.R;
+import android.support.annotation.NonNull;
 
 public class MyAlarmDialog extends Dialog {
+    public MyAlarmDialog(@NonNull Context context) {
+        super(context);
+    }
 
-    protected static int default_width = WindowManager.LayoutParams.WRAP_CONTENT; // 기본 폭
+    /*protected static int default_width = WindowManager.LayoutParams.WRAP_CONTENT; // 기본 폭
     protected static int default_height = WindowManager.LayoutParams.WRAP_CONTENT;// 디폴트의 높이
     public static int TYPE_TWO_BT = 2;
     public static int TYPE_NO_BT = 0;
@@ -87,6 +79,6 @@ public class MyAlarmDialog extends Dialog {
         icon.setBackgroundResource(iconResId);
 
         return this;
-    }
+    }*/
 
 }

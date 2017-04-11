@@ -9,29 +9,44 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import com.lthwea.finedust.R;
+import com.lthwea.finedust.controller.AlarmDataController;
 import com.lthwea.finedust.util.Utils;
 import com.lthwea.finedust.vo.AlarmVO;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by LeeTaeHun on 2017. 4. 10..
  */
 
-public class AlarmListActivity extends AppCompatActivity {
+public class AlarmListActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
+
+    public static String ALARM_ID_FOR_UPDATE_TAG = "ALARM_ID_FOR_UPDATE";       // list -> activity 로 수정시 db id값을 넘겨주기 위함
+    public static String ALARM_IS_UPDATE_TAG = "ALARM_IS_UPDATE";
+
+
+    private static String TAG = "AlarmListActivity";
+
+
+    ImageButton ibtn_alarm_list_back;
+    ImageButton ibtn_alarm_list_add;
+
+    private AlarmDataController db;
+
+    AlarmVoAdapter voAdapter;
+    ListView listView;
+
+    //boolean[] test = new boolean[]{ false, false, false, false, false, false, false};
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -46,14 +61,29 @@ public class AlarmListActivity extends AppCompatActivity {
         actionBar.setTitle("미세먼지 알림 설정");*/
 
 
+        ibtn_alarm_list_back = (ImageButton) findViewById(R.id.ibtn_alarm_list_back);
+        ibtn_alarm_list_add = (ImageButton) findViewById(R.id.ibtn_alarm_list_add);
+        ibtn_alarm_list_back.setOnClickListener(this);
+        ibtn_alarm_list_add.setOnClickListener(this);
 
-        List<AlarmVO> voList = new ArrayList<>();
-        boolean[] test = new boolean[]{ false, false, false, false, false, false, false};
 
 
+        db = new AlarmDataController(this);
 
-        // test data
-        AlarmVO vo = new AlarmVO(0, "Y", "서울", "강남구", 15, 30, "월 일");
+        List<AlarmVO> voList = db.selectAllData();
+        listView = (ListView)findViewById(R.id.listView);
+
+        voAdapter = new AlarmVoAdapter(this, R.layout.alarm_list_item, voList);
+
+        listView.setAdapter(voAdapter);
+        listView.setOnItemClickListener(this);
+
+        //db.insertAlarmData(vo);
+        Utils.printDBData(db);
+        Log.d("getDataCount", db.getDataCount() + " ");
+
+
+        /*AlarmVO vo = new AlarmVO(0, "Y", "서울", "강남구", 15, 30, "월 일");
         AlarmVO vo2 = new AlarmVO(1, "Y", "서울", "도봉구", 13, 30, "월 화 수 목 금 토 일");
         AlarmVO vo3 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
         AlarmVO vo4 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
@@ -86,21 +116,41 @@ public class AlarmListActivity extends AppCompatActivity {
         voList.add(vo14);
         voList.add(vo15);
         voList.add(vo16);
-        voList.add(vo17);
+        voList.add(vo17);*/
 
 
 
 
-        ListView listView = (ListView)findViewById(R.id.listView);
-        AlarmVoAdapter voAdapter = new AlarmVoAdapter(this, R.layout.alarm_list_item, voList);
-        listView.setAdapter(voAdapter);
+
+
+
 
     }
 
+    @Override
+    public void onClick(View v) {
 
+        Log.d("onClick", "??");
 
+        if(v.getId() == R.id.ibtn_alarm_list_back){
+            this.finish();
+        }else if(v.getId() == R.id.ibtn_alarm_list_add){
+            Intent intent = new Intent(this, AlarmActivity.class);
+            startActivityForResult(intent, MainActivity.INTENT_ALARM_CODE);
+        }
 
+    }
 
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+        AlarmVO vo = voAdapter.getItem(position);
+        Intent intent = new Intent(this, AlarmActivity.class);
+        intent.putExtra(ALARM_ID_FOR_UPDATE_TAG, vo.getId());
+        intent.putExtra(ALARM_IS_UPDATE_TAG, true);
+        startActivity(intent);
+
+    }
 
 
     private class AlarmVoAdapter extends ArrayAdapter<AlarmVO> {
@@ -160,6 +210,7 @@ public class AlarmListActivity extends AppCompatActivity {
     }
 
 
+/*
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -178,6 +229,7 @@ public class AlarmListActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+*/
 
  /*   @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -208,8 +260,11 @@ public class AlarmListActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-
+    }
 }
 
 

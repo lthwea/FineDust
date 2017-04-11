@@ -5,10 +5,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.provider.BaseColumns;
+import android.util.Log;
 
 import com.lthwea.finedust.vo.AlarmVO;
-import com.lthwea.finedust.vo.MarkerVO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,49 +39,52 @@ public class AlarmDataController extends SQLiteOpenHelper{
 
     // Query
     private static final String SQL_CREATE_ENTRIES =
-            "CREATE TABLE " + TABLE_NAME + " (" +
+            "CREATE TABLE " + TABLE_NAME + "(" +
                     KEY_ID + " INTEGER PRIMARY KEY," +
-                    KEY_CITY_NAME + "TEXT," +
-                    KEY_SIDO_NAME + "TEXT," +
-                    KEY_HOUR + "INTEGER," +
-                    KEY_MIN + "INTEGER," +
-                    KEY_DAYS + "TEXT" +
-                    " )";
+                    KEY_IS_USE + " TEXT," +
+                    KEY_CITY_NAME + " TEXT," +
+                    KEY_SIDO_NAME + " TEXT," +
+                    KEY_HOUR + " INTEGER," +
+                    KEY_MIN + " INTEGER," +
+                    KEY_DAYS + " TEXT" +
+                    ")";
 
     private static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + TABLE_NAME;
 
 
-    public AlarmDataController(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
+    public AlarmDataController(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        Log.d("AlarmDataController", SQL_CREATE_ENTRIES);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        Log.d("AlarmDataController", "onCreate");
         db.execSQL(SQL_CREATE_ENTRIES);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        // This database is only a cache for online data, so its upgrade policy is
+        // to simply to discard the data and start over
+        /*db.execSQL(SQL_DELETE_ENTRIES);
+        onCreate(db);*/
     }
 
-
-
-
-
     public long insertAlarmData(AlarmVO vo){
-        SQLiteDatabase db = this.getWritableDatabase();
 
+        SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
+        //values.put(KEY_ID, vo.getId());
         values.put(KEY_IS_USE, vo.getIsUse());
         values.put(KEY_SIDO_NAME, vo.getSidoName());
         values.put(KEY_CITY_NAME, vo.getCityName());
         values.put(KEY_HOUR, vo.getHour());
         values.put(KEY_MIN, vo.getMin());
         values.put(KEY_DAYS, vo.getDays());
-
         long newRowId = db.insert(TABLE_NAME, null, values);
+        db.close();
         return newRowId;
 
     }
@@ -116,6 +118,7 @@ public class AlarmDataController extends SQLiteOpenHelper{
             } while (cursor.moveToNext());
         }
 
+        db.close();
         // return  list
         return list;
 
@@ -150,14 +153,22 @@ public class AlarmDataController extends SQLiteOpenHelper{
             cursor.moveToFirst();
 
         AlarmVO vo = new AlarmVO();
-        vo.setId(Integer.parseInt(cursor.getString(0)));
-        vo.setIsUse(cursor.getString(1));
-        vo.setSidoName(cursor.getString(2));
-        vo.setCityName(cursor.getString(3));
-        vo.setHour(Integer.parseInt(cursor.getString(4)));
-        vo.setMin(Integer.parseInt(cursor.getString(5)));
-        vo.setDays(cursor.getString(6));
 
+        if (cursor.moveToFirst()) {
+            do {
+                vo.setId(Integer.parseInt(cursor.getString(0)));
+                vo.setIsUse(cursor.getString(1));
+                vo.setSidoName(cursor.getString(2));
+                vo.setCityName(cursor.getString(3));
+                vo.setHour(Integer.parseInt(cursor.getString(4)));
+                vo.setMin(Integer.parseInt(cursor.getString(5)));
+                vo.setDays(cursor.getString(6));
+            } while (cursor.moveToNext());
+        }
+
+
+
+        db.close();
         // return contact
         return vo;
     }
@@ -184,6 +195,7 @@ public class AlarmDataController extends SQLiteOpenHelper{
                 , new String[] { String.valueOf(vo.getId()) }           //where value
                 );
 
+        db.close();
         return count;
     }
 
@@ -199,6 +211,8 @@ public class AlarmDataController extends SQLiteOpenHelper{
                 , new String[] { String.valueOf(id) } //selectionArgs
         );
 
+        db.close();
+
     }
 
 
@@ -210,5 +224,27 @@ public class AlarmDataController extends SQLiteOpenHelper{
         db.execSQL("delete from "+ TABLE_NAME);
 
     }
+
+    public int getDataCount() {
+        String countQuery = "SELECT  * FROM " + TABLE_NAME;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(countQuery, null);
+        int cnt = cursor.getCount();
+        cursor.close();
+
+        // return count
+        return cnt;
+    }
+
+
+    public void deleteTable(){
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Issue SQL statement.
+        db.execSQL(SQL_DELETE_ENTRIES);
+
+        db.close();
+    }
+
 
 }

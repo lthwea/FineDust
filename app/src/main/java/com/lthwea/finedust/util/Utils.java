@@ -4,10 +4,13 @@ import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.lthwea.finedust.cnst.MapConst;
+import com.lthwea.finedust.controller.AlarmDataController;
+import com.lthwea.finedust.vo.AlarmVO;
 import com.lthwea.finedust.vo.MarkerVO;
 
 import java.util.GregorianCalendar;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by LeeTaeHun on 2017. 4. 7..
@@ -254,6 +257,13 @@ public class Utils {
         return time;
     }
 
+
+    public static void printDBData(AlarmDataController db){
+        List<AlarmVO> list = db.selectAllData();
+        for(AlarmVO vo : list){
+            Log.d("printDBData", vo.toString());
+        }
+    }
 
 
 }
