@@ -18,6 +18,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.lthwea.finedust.R;
 import com.lthwea.finedust.alarm.MyAlarmReceiver;
@@ -33,10 +34,8 @@ import java.util.List;
  * Created by LeeTaeHun on 2017. 4. 7..
  */
 
-public class AlarmActivity extends AppCompatActivity
+public class AlarmActivity extends AppCompatActivity implements View.OnClickListener
 {
-
-    TextView tv_alarm_loc_value, tv_alarm_time_value, tv_alarm_day_value;
 
     private String ALARM_LOCATION = "";
     private String ALARM_TIME = "";         // NN:NN
@@ -45,10 +44,20 @@ public class AlarmActivity extends AppCompatActivity
     private String ALARM_DAY = "";
 
 
-    private PrefController pref;
-    Button btn_alarm_setting;
 
-    RelativeLayout rl_loc, rl_time, rl_day;
+
+    private PrefController pref;
+
+
+
+    RelativeLayout rl_loc, rl_time;
+
+    Button btn_alarm_completed;
+
+    TextView tv_alarm_loc, tv_alarm_time;
+
+    ToggleButton tbtn_0, tbtn_1, tbtn_2, tbtn_3, tbtn_4, tbtn_5, tbtn_6, tbtn_7;
+
 
     // String array for alert dialog multi choice items
     final String[] days = new String[]{
@@ -66,7 +75,9 @@ public class AlarmActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_alarm2);
+        setContentView(R.layout.activity_alarm);
+
+        Log.d("AlarmActivity", "onCreate call");
 
         // back button
         android.support.v7.app.ActionBar actionBar = getSupportActionBar();
@@ -74,45 +85,30 @@ public class AlarmActivity extends AppCompatActivity
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle("미세먼지 알림 설정");
 
+        tv_alarm_loc = (TextView) findViewById(R.id.tv_alarm_loc);
+        tv_alarm_loc.setOnClickListener(this);
 
-        tv_alarm_loc_value = (TextView) findViewById(R.id.tv_alarm_loc_value);
-        tv_alarm_time_value = (TextView) findViewById(R.id.tv_alarm_time_value);
-        tv_alarm_day_value = (TextView) findViewById(R.id.tv_alarm_day_value);
+        tv_alarm_time = (TextView) findViewById(R.id.tv_alarm_time);
+        tv_alarm_time.setOnClickListener(this);
 
+        Calendar cal = Calendar.getInstance();
+        ALARM_HOUR = cal.get(Calendar.HOUR_OF_DAY);
+        ALARM_MIN = cal.get(Calendar.MINUTE);
+
+        tv_alarm_time.setText( Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN) );
 
         rl_loc = (RelativeLayout) findViewById(R.id.rl_loc);
-        rl_loc.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                Intent i = getIntent();
-                i.putExtra("isSetLocation", "Y");
-                setResult(MainActivity.INTENT_ALARM_CODE, i);
-                finish();
-            }
-        });
+        //rl_loc.setOnClickListener(this);
 
-        rl_time = (RelativeLayout)findViewById(R.id.rl_time);
-        rl_time.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int hour, minute;
-                GregorianCalendar calendar = new GregorianCalendar();
-                hour = calendar.get(Calendar.HOUR_OF_DAY);
-                minute = calendar.get(Calendar.MINUTE);
-                new TimePickerDialog(AlarmActivity.this, timeSetListener, hour, minute, false).show();
+        rl_time = (RelativeLayout) findViewById(R.id.rl_time);
+        //rl_time.setOnClickListener(this);
 
-            }
+        btn_alarm_completed = (Button) findViewById(R.id.btn_alarm_completed) ;
+        btn_alarm_completed.setOnClickListener(this);
 
-        });
 
-        rl_day = (RelativeLayout)findViewById(R.id.rl_day);
-        rl_day.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                popDayDialog();
-            }
-        });
 
+/*
 
         btn_alarm_setting = (Button) findViewById(R.id.btn_alarm_setting);
         btn_alarm_setting.setOnClickListener(new View.OnClickListener() {
@@ -125,35 +121,38 @@ public class AlarmActivity extends AppCompatActivity
                 }
             }
         });
+*/
 
 
+        Intent i = getIntent();
+        ALARM_LOCATION = i.getStringExtra("ALARM_LOCATION");
+        if(ALARM_LOCATION == null || "".equals(ALARM_LOCATION)){
+
+        }else{
+            tv_alarm_loc.setText(ALARM_LOCATION);
+        }
 
 
 
         pref = new PrefController(this);
         if( !pref.isAlarmUse()){
-            btn_alarm_setting.setText("알림 등록");
             rl_loc.setClickable(true);
             rl_time.setClickable(true);
-            rl_day.setClickable(true);
 
-            findViewById(R.id.tv_alarm_arrow1).setVisibility(View.VISIBLE);
-            findViewById(R.id.tv_alarm_arrow2).setVisibility(View.VISIBLE);
-            findViewById(R.id.tv_alarm_arrow3).setVisibility(View.VISIBLE);
+//            findViewById(R.id.tv_alarm_arrow1).setVisibility(View.VISIBLE);
+//            findViewById(R.id.tv_alarm_arrow2).setVisibility(View.VISIBLE);
+//            findViewById(R.id.tv_alarm_arrow3).setVisibility(View.VISIBLE);
 
-            Intent i = getIntent();
-            ALARM_LOCATION = i.getStringExtra("ALARM_LOCATION");
+
             Log.d("ALARM_LOCATION", ALARM_LOCATION+ "   !!!   !!");
 
         }else{
-            btn_alarm_setting.setText("알림 삭제");
             rl_loc.setClickable(false);
             rl_time.setClickable(false);
-            rl_day.setClickable(false);
 
-            findViewById(R.id.tv_alarm_arrow1).setVisibility(View.INVISIBLE);
-            findViewById(R.id.tv_alarm_arrow2).setVisibility(View.INVISIBLE);
-            findViewById(R.id.tv_alarm_arrow3).setVisibility(View.INVISIBLE);
+//            findViewById(R.id.tv_alarm_arrow1).setVisibility(View.INVISIBLE);
+//            findViewById(R.id.tv_alarm_arrow2).setVisibility(View.INVISIBLE);
+//            findViewById(R.id.tv_alarm_arrow3).setVisibility(View.INVISIBLE);
 
             ALARM_LOCATION = pref.getPrefIAlarmLocation();
             ALARM_TIME = pref.getPrefAlarmTime();
@@ -163,13 +162,35 @@ public class AlarmActivity extends AppCompatActivity
 
 
 
-        checkAlarmData();
+        //checkAlarmData();
 
     }
 
+    @Override
+    public void onClick(View v) {
+        Log.d("onClick", v.getId() + "asdasdadads");
+
+        if( v.getId() == R.id.tv_alarm_loc ){
+            Intent i = getIntent();
+            i.putExtra("isSetLocation", "Y");
+            setResult(MainActivity.INTENT_ALARM_CODE, i);
+            finish();
+
+        }else if( v.getId() == R.id.tv_alarm_time ){
+
+            int hour, minute;
+            GregorianCalendar calendar = new GregorianCalendar();
+            hour = calendar.get(Calendar.HOUR_OF_DAY);
+            minute = calendar.get(Calendar.MINUTE);
+            new TimePickerDialog(AlarmActivity.this, timeSetListener, hour, minute, false).show();
+
+        }else if ( v.getId() == R.id.btn_alarm_completed ){
+
+        }
+    }
 
 
-
+/*
 
     public void setAlarm(){
 
@@ -195,11 +216,13 @@ public class AlarmActivity extends AppCompatActivity
                     AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
 
 
-                    /*Calendar calendar = Calendar.getInstance();
+                    */
+/*Calendar calendar = Calendar.getInstance();
                     calendar.set(Calendar.HOUR_OF_DAY, ALARM_HOUR);
                     calendar.set(Calendar.MINUTE, ALARM_MIN);
                     calendar.set(Calendar.SECOND, 0);
-                    calendar.set(Calendar.MILLISECOND, 0);*/
+                    calendar.set(Calendar.MILLISECOND, 0);*//*
+
                     //alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
 
                     if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ){
@@ -234,9 +257,10 @@ public class AlarmActivity extends AppCompatActivity
         }
 
     }
+*/
 
 
-
+/*
     public boolean checkAlarmData(){
 
         boolean isValid = true;
@@ -267,6 +291,7 @@ public class AlarmActivity extends AppCompatActivity
         return isValid;
 
     }
+*/
 
 
 
@@ -275,7 +300,6 @@ public class AlarmActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                //Write your logic here
                 this.finish();
                 return true;
             default:
@@ -289,8 +313,9 @@ public class AlarmActivity extends AppCompatActivity
         public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
             ALARM_HOUR = hourOfDay;
             ALARM_MIN = minute;
-            ALARM_TIME = Integer.toString(ALARM_HOUR) + ":" + Integer.toString(ALARM_MIN);
-            checkAlarmData();
+            ALARM_TIME = Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN);
+            tv_alarm_time.setText(ALARM_TIME);
+            //checkAlarmData();
             //Toast.makeText(AlarmActivity.this, msg, Toast.LENGTH_SHORT).show();
         }
 
@@ -301,6 +326,7 @@ public class AlarmActivity extends AppCompatActivity
 
 
 
+    /*
     public void popDayDialog() {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -358,6 +384,7 @@ public class AlarmActivity extends AppCompatActivity
         // Display the alert dialog on interface
         dialog.show();
     }
+    */
 
 
 
@@ -398,13 +425,13 @@ public class AlarmActivity extends AppCompatActivity
         });
         builder.show();
 
-
-
     }
 
 
 
-
+    public void printLog(String msg){
+        Log.d("AlarmAcitivity", msg);
+    }
 
 
 }

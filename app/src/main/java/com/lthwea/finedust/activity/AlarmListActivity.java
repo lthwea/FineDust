@@ -1,9 +1,31 @@
 package com.lthwea.finedust.activity;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.LayoutRes;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.lthwea.finedust.R;
+import com.lthwea.finedust.util.Utils;
+import com.lthwea.finedust.vo.AlarmVO;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by LeeTaeHun on 2017. 4. 10..
@@ -14,39 +36,74 @@ public class AlarmListActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //setContentView(R.layout.alarm_list_activity);
-        setContentView(R.layout.activity_alarm);
+        setContentView(R.layout.alarm_list_activity);
+        getSupportActionBar().hide();
 
         // back button
-        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
+      /*  android.support.v7.app.ActionBar actionBar = getSupportActionBar();
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle("미세먼지 알림 설정");
+        actionBar.setTitle("미세먼지 알림 설정");*/
 
 
-/*
+
         List<AlarmVO> voList = new ArrayList<>();
         boolean[] test = new boolean[]{ false, false, false, false, false, false, false};
-        //AlarmVO(boolean isUse, String cityName, String sidoName, boolean[] days, String time, int hour, int min)
 
 
-        AlarmVO vo = new AlarmVO(true, "서울", "강남구", test, "07시30분", 07, 30);
+
+        // test data
+        AlarmVO vo = new AlarmVO(0, "Y", "서울", "강남구", 15, 30, "월 일");
+        AlarmVO vo2 = new AlarmVO(1, "Y", "서울", "도봉구", 13, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo3 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo4 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo5 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo6 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo7 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo8 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo9 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo10 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo11 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo12 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo13 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo14 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo15 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo16 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
+        AlarmVO vo17 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
         voList.add(vo);
+        voList.add(vo2);
+        voList.add(vo3);
+        voList.add(vo4);
+        voList.add(vo5);
+        voList.add(vo6);
+        voList.add(vo7);
+        voList.add(vo8);
+        voList.add(vo9);
+        voList.add(vo10);
+        voList.add(vo11);
+        voList.add(vo12);
+        voList.add(vo13);
+        voList.add(vo14);
+        voList.add(vo15);
+        voList.add(vo16);
+        voList.add(vo17);
+
+
+
 
         ListView listView = (ListView)findViewById(R.id.listView);
         AlarmVoAdapter voAdapter = new AlarmVoAdapter(this, R.layout.alarm_list_item, voList);
-        listView.setAdapter(voAdapter);*/
+        listView.setAdapter(voAdapter);
 
     }
 
 
-/*
+
+
 
 
 
     private class AlarmVoAdapter extends ArrayAdapter<AlarmVO> {
-
-
 
         private int layoutResource;
 
@@ -70,20 +127,31 @@ public class AlarmListActivity extends AppCompatActivity {
 
             AlarmVO vo = getItem(position);
             if (vo != null) {
-                TextView tv1 = (TextView) view.findViewById(R.id.tv_alarm_item_loc);
-                TextView tv2 = (TextView) view.findViewById(R.id.tv_alarm_item_time);
+                TextView tv_alarm_item_loc = (TextView) view.findViewById(R.id.tv_alarm_item_loc);
+                TextView tv_alarm_item_time = (TextView) view.findViewById(R.id.tv_alarm_item_time);
+                TextView tv_alarm_item_day = (TextView) view.findViewById(R.id.tv_alarm_item_day);
                 Switch sw = (Switch) view.findViewById(R.id.sw_alarm_item_isuse);
 
-                if (tv1 != null) {
-                    tv1.setText(vo.getSidoName() + "" + vo.getCityName());
+                if (tv_alarm_item_loc != null) {
+                    tv_alarm_item_loc.setText(vo.getSidoName() + " " + vo.getCityName());
                 }
 
-                if (tv2 != null) {
-                    tv2.setText(vo.getTime());
+                if (tv_alarm_item_time != null) {
+                    tv_alarm_item_time.setText(Utils.getTimeStringFormat(vo.getHour(), vo.getMin()));
                 }
+
+                if (tv_alarm_item_day != null) {
+                    tv_alarm_item_day.setText(vo.getDays());
+                }
+
 
                 if (sw != null) {
-                    sw.setText(vo.getIsUse() + " ");
+                    if("Y".equals(vo.getIsUse())){
+                        sw.setChecked(true);
+                    }else{
+                        sw.setChecked(false);
+                    }
+
                 }
             }
 
@@ -111,12 +179,12 @@ public class AlarmListActivity extends AppCompatActivity {
         }
     }
 
-    @Override
+ /*   @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.alarm_plus_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
-
+*/
 
 
     @Override
@@ -139,7 +207,7 @@ public class AlarmListActivity extends AppCompatActivity {
 
     }
 
-*/
+
 
 
 }

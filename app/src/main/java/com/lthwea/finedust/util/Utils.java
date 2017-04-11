@@ -224,4 +224,36 @@ public class Utils {
 
 
 
+
+    public static String getTimeStringFormat(int hour, int min){
+        String time = "";
+
+        if(hour <= 11){
+            time += "오전 ";
+        }else{
+            time += "오후 ";
+        }
+
+        if(hour >= 13){
+            String h = Integer.toString(hour-12);
+            if (h.length() == 1) time += "0"+h;
+            else                 time += h;
+        }else{
+            String h = Integer.toString(hour);
+            if (h.length() == 1) time += "0"+h;
+            else                 time += h;
+        }
+
+        String a = "";
+        if( Integer.toString(min).length() == 1)
+            time += "시 " + 0 + min + "분";
+        else
+            time += "시 " + min + "분";
+
+
+        return time;
+    }
+
+
+
 }

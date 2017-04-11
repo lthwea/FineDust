@@ -5,46 +5,49 @@ package com.lthwea.finedust.vo;
  */
 
 public class AlarmVO {
-    private boolean isUse;
-    private String cityName;
+    private int id;
+    private String isUse;
     private String sidoName;
-    private boolean[] days;
-    private String time;
+    private String cityName;
     private int hour;
     private int min;
-
+    private String days;
 
     public AlarmVO(){
-        days =  new boolean[]{false,false,false,false,false,false,false};
-                                //월    화   수    목    금     토     일
     }
 
 
-    public AlarmVO(boolean isUse, String sidoName, String cityName, boolean[] days, String time, int hour, int min) {
-        days =  new boolean[]{};
+    public AlarmVO(int id, String isUse, String sidoName, String cityName, int hour, int min, String days) {
+        this.id = id;
         this.isUse = isUse;
         this.sidoName = sidoName;
         this.cityName = cityName;
-        this.days = days;
-        this.time = time;
         this.hour = hour;
         this.min = min;
+        this.days = days;
     }
 
-    public boolean getIsUse() {
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getIsUse() {
         return isUse;
     }
 
-    public void setIsUse(boolean use) {
-        isUse = use;
+    public void setIsUse(String isUse) {
+        this.isUse = isUse;
     }
 
-
-    public boolean[] getDays() {
+    public String getDays() {
         return days;
     }
 
-    public void setDays(boolean[] days) {
+    public void setDays(String days) {
         this.days = days;
     }
 
@@ -64,21 +67,15 @@ public class AlarmVO {
         this.sidoName = sidoName;
     }
 
-    public boolean isUse() {
+    public String isUse() {
         return isUse;
     }
 
-    public void setUse(boolean use) {
+    public void setUse(String use) {
         isUse = use;
     }
 
-    public String getTime() {
-        return time;
-    }
 
-    public void setTime(String time) {
-        this.time = time;
-    }
 
     public int getHour() {
         return hour;
@@ -95,4 +92,19 @@ public class AlarmVO {
     public void setMin(int min) {
         this.min = min;
     }
+
+
+    @Override
+    public String toString() {
+        return "AlarmVO{" +
+                "id=" + id +
+                ", isUse='" + isUse + '\'' +
+                ", cityName='" + cityName + '\'' +
+                ", sidoName='" + sidoName + '\'' +
+                ", days='" + days + '\'' +
+                ", hour=" + hour +
+                ", min=" + min +
+                '}';
+    }
+
 }

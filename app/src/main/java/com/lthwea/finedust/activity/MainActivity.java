@@ -29,6 +29,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -101,6 +102,7 @@ public class MainActivity extends AppCompatActivity
 
 
     private Toolbar toolbar;
+    private NavigationView navigationView;
     public int actionBarHeight;
     public LinearLayout ll_status;
 
@@ -117,7 +119,7 @@ public class MainActivity extends AppCompatActivity
 
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle("전국 미세먼지 정보");
+        toolbar.setTitle("전국 미세먼지 정보");;
         setSupportActionBar(toolbar);
 
 
@@ -147,10 +149,13 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        if(isDustType) navigationView.getMenu().getItem(0).setChecked(true);
-        else           navigationView.getMenu().getItem(1).setChecked(true);
+
+
+        if(isDustType) navigationView.getMenu().getItem(0).getSubMenu().getItem(0).setChecked(true);
+        else           navigationView.getMenu().getItem(0).getSubMenu().getItem(1).setChecked(true);
+
 
         // firebase FCM
        /* FirebaseMessaging.getInstance().subscribeToTopic("news");
@@ -406,13 +411,13 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+
     /**
      * Navigation Item Event
      */
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
         // Handle navigation view item clicks here.
         int id = item.getItemId();
@@ -503,6 +508,8 @@ public class MainActivity extends AppCompatActivity
                     showToast("전국 미세먼지 정보입니다.");
                     updateClusterManager();
                     changeTextViewStatus();
+                    navigationView.getMenu().getItem(0).getSubMenu().getItem(0).setChecked(true);
+                    navigationView.getMenu().getItem(0).getSubMenu().getItem(1).setChecked(false);
                 }else{
                     showToast("미세먼지 데이터 사용중 입니다.");
                 }
@@ -514,17 +521,16 @@ public class MainActivity extends AppCompatActivity
                     showToast("전국 초미세먼지 정보입니다.");
                     updateClusterManager();
                     changeTextViewStatus();
+                    navigationView.getMenu().getItem(0).getSubMenu().getItem(0).setChecked(false);
+                    navigationView.getMenu().getItem(0).getSubMenu().getItem(1).setChecked(true);
                 }else{
                     showToast("초미세먼지 데이터 사용중 입니다.");
                 }
 
             }
 
-
-            drawer.closeDrawer(GravityCompat.START);
-            return true;
         }
-
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return false;
 
@@ -552,12 +558,8 @@ public class MainActivity extends AppCompatActivity
         }
         CameraUpdate zoom = CameraUpdateFactory.zoomTo( (float) zoomLevel);
         mMap.animateCamera(zoom);*/
-
-
-
-
-
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -573,8 +575,6 @@ public class MainActivity extends AppCompatActivity
         }else{
             Log.e("onActivityResult", resultCode + " " + data);
         }
-
-
     }
 
 
@@ -1024,7 +1024,7 @@ public class MainActivity extends AppCompatActivity
 
         if (0 <= intervalTime && FINSH_INTERVAL_TIME >= intervalTime) {
             super.onBackPressed();
-            //android.os.Process.killProcess(android.os.Process.myPid());
+            android.os.Process.killProcess(android.os.Process.myPid());
         } else {
             backPressedTime = tempTime;
             Toast.makeText(getApplicationContext(), "한번 더 뒤로가기 버튼 입력시 종료됩니다.", Toast.LENGTH_SHORT).show();

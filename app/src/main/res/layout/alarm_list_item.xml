@@ -1,37 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/white">
 
 
-    <TextView
-        android:id="@+id/tv_alarm_item_loc"
+    <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:text="서울시 강남구"
-        android:textSize="30dp" />
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="20dp">
 
-    <TextView
-        android:id="@+id/tv_alarm_item_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="오전 06:00"
-        android:textSize="30dp"
-        android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/sw_alarm_item_isuse"
-        android:layout_marginLeft="15dp"
-        android:layout_marginStart="15dp"
-        android:layout_alignBottom="@+id/tv_alarm_item_loc" />
+      <!--  <ImageView
+            android:id="@+id/iv_icon_loc"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentLeft="true"
+            android:layout_marginTop="5dp"
+            android:src="@drawable/icon_seoul"/>-->
 
-    <Switch
-        android:id="@+id/sw_alarm_item_isuse"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:text="월 화 수 목 금 토 일"
-        android:textSize="15dp"
-        android:layout_alignBottom="@+id/tv_alarm_item_loc"/>
+        <TextView
+            android:id="@+id/tv_alarm_item_loc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:text="서울시 강남구"
+            android:textColor="@color/black"
+            android:textSize="20dp" />
+
+        <TextView
+            android:id="@+id/tv_alarm_item_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_below="@+id/tv_alarm_item_loc"
+            android:text="오전 06:00"
+            android:textSize="17dp"
+            android:textColor="@color/black"/>
+
+        <TextView
+            android:id="@+id/tv_alarm_item_day"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_below="@+id/tv_alarm_item_time"
+            android:text="월 화 수 목 금 토 일"
+            android:textColor="@color/black"/>
+
+
+        <Switch
+            android:id="@+id/sw_alarm_item_isuse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
+    </RelativeLayout>
+
 
 </RelativeLayout>
