@@ -17,6 +17,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.lthwea.finedust.R;
+import com.lthwea.finedust.cnst.MapConst;
 import com.lthwea.finedust.controller.AlarmDataController;
 import com.lthwea.finedust.util.Utils;
 import com.lthwea.finedust.vo.AlarmVO;
@@ -122,30 +123,18 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 
 
 
-        Intent i = getIntent();
-        ALARM_LOCATION = i.getStringExtra("ALARM_LOCATION");
-        if(ALARM_LOCATION == null || "".equals(ALARM_LOCATION)){            //첫실행일경우
-            isVaildLocation = false;
-        }else{
-            tv_alarm_loc.setText(ALARM_LOCATION);
-            isVaildLocation = true;
-        }
-
-        IS_UPDATE = i.getBooleanExtra(AlarmListActivity.ALARM_IS_UPDATE_TAG, false);
+        checkIntentData();
         changeUpdateUI();
         isVaildAlarmData();
 
 
-
-
-        // Update로 넘어 온 경우 해야할 일
-        ALARM_ID = i.getIntExtra(AlarmListActivity.ALARM_ID_FOR_UPDATE_TAG, 9999);
-        Log.d("AlarmActivityIntent", "ALARM_LOCATION : " + ALARM_LOCATION);
-        Log.d("AlarmActivityIntent", "ALARM_ID : " + ALARM_ID);
         AlarmVO vo = db.selectData(ALARM_ID);
         Log.d("AlarmActivityIntent", "vo : " + vo.toString());
 
         if(ALARM_ID != 9999 && vo != null){
+
+            Log.d("ALARM_ID", ALARM_ID + " ");
+
             ALARM_LOCATION = vo.getSidoName() + " " + vo.getCityName();
             ALARM_HOUR = vo.getHour();
             ALARM_MIN = vo.getMin();
@@ -157,7 +146,10 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
             tv_alarm_loc.setText(ALARM_LOCATION);
             tv_alarm_time.setText(ALARM_TIME);
             convertStringToBooleanDays(vo.getDays());   // including UI Update
+            changeUpdateUI();
             isVaildAlarmData();
+
+            MapConst.intentVO.setAlarmVoId(MapConst.INTENT_DEFAULT_ID);
         }
 
 
@@ -219,9 +211,10 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 
         if( id == R.id.tv_alarm_loc ){
 
-            Intent i = getIntent();
-            i.putExtra("isSetLocation", "Y");
-            setResult(MainActivity.INTENT_ALARM_CODE, i);
+            MapConst.intentVO.setAlarmMarker(true);
+            MapConst.intentVO.setCheckedDays(ALARM_DAYS);
+
+            MapConst.intentVO.setAlarmMarking(true);
             finish();
 
         }else if( id == R.id.tv_alarm_time ){
@@ -244,7 +237,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                     //신규는 인서트
 
                     String msg = "지역 : " + ALARM_LOCATION +
-                                 "\n시간 : " + Utils.getTimeStringFormat(ALARM_HOUR, ALARM_HOUR) +
+                                 "\n시간 : " + Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN) +
                                  "\n반복 요일 : " + getStringDaysFormat() +
                                  "\n위 기준으로 미세먼지/초미세먼지 알림을 받으시겠습니까?";
 
@@ -259,10 +252,24 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                             String[] sidoCity = ALARM_LOCATION.split(" ");
                             int id = db.getDataCount();
                             AlarmVO vo = new AlarmVO(id+1, "Y", sidoCity[0], sidoCity[1], ALARM_HOUR, ALARM_MIN, getStringDaysFormat());
+                            Log.d("insertDB", vo.toString());
+                            Log.d("insertDB", sidoCity[0]);
+                            Log.d("insertDB", sidoCity[1]);
+
                             db.insertAlarmData(vo);
                             Toast.makeText(AlarmActivity.this, "알람 등록이 완료되었습니다.", Toast.LENGTH_SHORT).show();
                             //printDBData();
+
+
+                            MapConst.intentVO.setLocName(null);
+                            ALARM_LOCATION = null;
+
+
+                            Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
+                            startActivity(intent);
                             finish();
+
+
                         }
                     });
                     builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
@@ -277,8 +284,6 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                     //수정은 업데이트
 
 
-
-
                 }
 
             }else{
@@ -286,7 +291,22 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
             }
 
         }else if(  id == R.id.ibtn_alarm_back ){
-            this.finish();
+
+            if(MapConst.intentVO.isAlarmMarking()){
+                MapConst.intentVO.setAlarmMarking(false);
+                Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
+                startActivity(intent);
+                this.finish();
+            }else{
+                this.finish();
+            }
+            /*Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
+            startActivity(intent);
+            */
+
+
+
+
         }else if(  id == R.id.ibtn_alarm_delete ){
             //삭제
 
@@ -301,7 +321,14 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                 public void onClick(DialogInterface dialog, int which) {
                     db.deleteData(ALARM_ID);
                     Toast.makeText(AlarmActivity.this, "삭제가 완료되었습니다.", Toast.LENGTH_SHORT).show();
+
+
+                    MapConst.intentVO.setUpdatedOrDeleted(true);
+//                    Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
+//                    startActivity(intent);
                     finish();
+
+
                 }
             });
             builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
@@ -310,9 +337,6 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                 }
             });
             builder.show();
-
-
-
         }
 
         /* Toggle Button Event */
@@ -353,6 +377,14 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 
 
     public void changeUpdateUI(){
+
+        if(ALARM_LOCATION == null || "".equals(ALARM_LOCATION)){
+            isVaildLocation = false;
+        }else{
+            tv_alarm_loc.setText(ALARM_LOCATION);
+            isVaildLocation = true;
+        }
+
         if(IS_UPDATE == false){
             ibtn_alarm_delete.setVisibility(View.INVISIBLE);
             btn_alarm_completed.setText("완료");
@@ -361,6 +393,27 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
             btn_alarm_completed.setText("수정");
         }
 
+        //UI Update
+        if (ALARM_DAYS[0] == true) tbtn_0.setChecked(true);
+        else                       tbtn_0.setChecked(false);
+
+        if (ALARM_DAYS[1] == true) tbtn_1.setChecked(true);
+        else                       tbtn_1.setChecked(false);
+
+        if (ALARM_DAYS[2] == true) tbtn_2.setChecked(true);
+        else                       tbtn_2.setChecked(false);
+
+        if (ALARM_DAYS[3] == true) tbtn_3.setChecked(true);
+        else                       tbtn_3.setChecked(false);
+
+        if (ALARM_DAYS[4] == true) tbtn_4.setChecked(true);
+        else                       tbtn_4.setChecked(false);
+
+        if (ALARM_DAYS[5] == true) tbtn_5.setChecked(true);
+        else                       tbtn_5.setChecked(false);
+
+        if (ALARM_DAYS[6] == true) tbtn_6.setChecked(true);
+        else                       tbtn_6.setChecked(false);
 
     }
 
@@ -408,41 +461,43 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
     }
 
     public void convertStringToBooleanDays(String str){
-        String[] tmp = str.split(" ");
-        for(int i = 0 ; i < tmp.length ; i++){
-            String s = tmp[i];
-            if("월".equals(s)) ALARM_DAYS[0] = true;
-            else if("화".equals(s)) ALARM_DAYS[1] = true;
-            else if("수".equals(s)) ALARM_DAYS[2] = true;
-            else if("목".equals(s)) ALARM_DAYS[3] = true;
-            else if("금".equals(s)) ALARM_DAYS[4] = true;
-            else if("토".equals(s)) ALARM_DAYS[5] = true;
-            else if("일".equals(s)) ALARM_DAYS[6] = true;
+
+        if(str != null){
+            String[] tmp = str.split(" ");
+            for(int i = 0 ; i < tmp.length ; i++){
+                String s = tmp[i];
+                if("월".equals(s)) ALARM_DAYS[0] = true;
+                else if("화".equals(s)) ALARM_DAYS[1] = true;
+                else if("수".equals(s)) ALARM_DAYS[2] = true;
+                else if("목".equals(s)) ALARM_DAYS[3] = true;
+                else if("금".equals(s)) ALARM_DAYS[4] = true;
+                else if("토".equals(s)) ALARM_DAYS[5] = true;
+                else if("일".equals(s)) ALARM_DAYS[6] = true;
+            }
         }
 
 
         //UI Update
-
-        if (ALARM_DAYS[0] == true) tbtn_0.setChecked(true);
-        else                       tbtn_0.setChecked(false);
-
-        if (ALARM_DAYS[1] == true) tbtn_1.setChecked(true);
-        else                       tbtn_1.setChecked(false);
-
-        if (ALARM_DAYS[2] == true) tbtn_2.setChecked(true);
-        else                       tbtn_2.setChecked(false);
-
-        if (ALARM_DAYS[3] == true) tbtn_3.setChecked(true);
-        else                       tbtn_3.setChecked(false);
-
-        if (ALARM_DAYS[4] == true) tbtn_4.setChecked(true);
-        else                       tbtn_4.setChecked(false);
-
-        if (ALARM_DAYS[5] == true) tbtn_5.setChecked(true);
-        else                       tbtn_5.setChecked(false);
-
-        if (ALARM_DAYS[6] == true) tbtn_6.setChecked(true);
-        else                       tbtn_6.setChecked(false);
+//        if (ALARM_DAYS[0] == true) tbtn_0.setChecked(true);
+//        else                       tbtn_0.setChecked(false);
+//
+//        if (ALARM_DAYS[1] == true) tbtn_1.setChecked(true);
+//        else                       tbtn_1.setChecked(false);
+//
+//        if (ALARM_DAYS[2] == true) tbtn_2.setChecked(true);
+//        else                       tbtn_2.setChecked(false);
+//
+//        if (ALARM_DAYS[3] == true) tbtn_3.setChecked(true);
+//        else                       tbtn_3.setChecked(false);
+//
+//        if (ALARM_DAYS[4] == true) tbtn_4.setChecked(true);
+//        else                       tbtn_4.setChecked(false);
+//
+//        if (ALARM_DAYS[5] == true) tbtn_5.setChecked(true);
+//        else                       tbtn_5.setChecked(false);
+//
+//        if (ALARM_DAYS[6] == true) tbtn_6.setChecked(true);
+//        else                       tbtn_6.setChecked(false);
 
     }
 
@@ -454,15 +509,38 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
     }
 
 
-    public void insertData(){
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d("onActivityResult", "Alarm " + requestCode + " " + requestCode);
 
+        /*// this -> main 으로 위치 선택하고 넘어온 값을 받아와서 텍스트에 뿌림.
+        if(requestCode == MapConst.ALARM_TO_MAIN_REQ_CODE_INTENT){
+            if( data != null ){
+                Intent i = getIntent();
+                ALARM_LOCATION = i.getStringExtra(MapConst.ALARM_LOCATION_TAG);
+                if(ALARM_LOCATION == null || "".equals(ALARM_LOCATION)){            //첫실행일경우
+                    isVaildLocation = false;
+                }else{
+                    tv_alarm_loc.setText(ALARM_LOCATION);
+                    isVaildLocation = true;
+                }
+            }
+        }*/
+
+    }
+
+    public void checkIntentData(){
+        IS_UPDATE = !MapConst.intentVO.isAlarmAdd();
+        ALARM_ID = MapConst.intentVO.getAlarmVoId();
+        ALARM_LOCATION = MapConst.intentVO.getLocName();
+        ALARM_DAYS = MapConst.intentVO.getCheckedDays();
     }
 
 
 
 
-
-/*
+    /*
 
     public void setAlarm(){
 

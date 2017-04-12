@@ -1,6 +1,7 @@
 package com.lthwea.finedust.cnst;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.lthwea.finedust.vo.IntentVO;
 import com.lthwea.finedust.vo.MarkerVO;
 
 import java.util.ArrayList;
@@ -17,6 +18,37 @@ public class MapConst {
     public static String CURRENT_DATA_DATE = "";
     public static int CURRENT_MARKER_NUMBER = 0;
 
+
+    public static String ALARM_ID_FOR_UPDATE_TAG = "ALARM_ID_FOR_UPDATE";       // list -> activity 로 수정시 db id값을 넘겨주기 위함
+    public static String ALARM_IS_UPDATE_TAG = "ALARM_IS_UPDATE";               // list -> activity 로 수정시 db id값을 넘겨주기 위함
+
+    public static String ALARM_IS_CHANGE_TAG = "ALARM IS_CHANGE";               // alarm -> list 데이터 변경을 알려주어 listview update 처리 하기 위함
+
+
+    public static String ALARM_IS_SET_LOCATION_TAG = "ALARM_IS_SET_LOCATION";   // set -> main 으로 업데이트 한다는것을 알려주기 위함
+    public static String ALARM_LOCATION_TAG = "ALARM_LOCATION";   // main -> set  설정된 지역정보를 넘김
+
+
+    // intent request code
+  /*  public static int ALARM_TO_MAIN_REQ_CODE_INTENT = 0;
+    public static int LIST_TO_ALARM_REQ_CODE_INTENT = 1;
+    public static int MAIN_TO_LIST_REQ_CODE_INTENT = 2;*/
+
+
+    public static int I_MAIN_TO_LIST_REQ_CODE =  0;
+    public static int I_MAIN_TO_ALARM_REQ_CODE = 1;
+    public static int I_LIST_TO_ALARM_REQ_CODE = 2;
+
+    public static int I_LIST_TO_MAIN_RES_CODE =  3;
+    public static int I_ALARM_TO_MAIN_RES_CODE = 4;
+    public static int I_ALARM_TO_LIST_RES_CODE = 5;
+
+
+
+
+
+
+    //public static int LIST_TO_MAIN_REQ_CODE_INTENT = 3;
 
     /*
             04-03 16:27:08.755 12091-12091/com.lthwea.finedust D/defaultInfo: 경상남도	35.4606,128.2132
@@ -36,6 +68,12 @@ public class MapConst {
             04-03 16:27:14.117 12091-12091/com.lthwea.finedust D/defaultInfo: 서울특별시	37.566535,126.9779692
             04-03 16:27:14.327 12091-12091/com.lthwea.finedust D/defaultInfo: 인천광역시	37.4562557,126.7052062
 */
+
+    public static int INTENT_DEFAULT_ID = 9999;
+    public static boolean[] INTENT_DEFAULT_DAYS = new boolean[]{
+            false,false,false,false,false,false,false
+    };
+    public static IntentVO intentVO = new IntentVO(false, null, false, INTENT_DEFAULT_ID, false, INTENT_DEFAULT_DAYS, false);
 
 
     public static Map<String, MarkerVO> markerMap = new HashMap<String, MarkerVO>(){
@@ -465,7 +503,7 @@ public class MapConst {
 
         }
     };
-*/
+
 
 
 
@@ -624,7 +662,7 @@ public class MapConst {
 
         }
     };
-
+*/
 
 
 }

@@ -42,8 +42,8 @@ public class AlarmDataController extends SQLiteOpenHelper{
             "CREATE TABLE " + TABLE_NAME + "(" +
                     KEY_ID + " INTEGER PRIMARY KEY," +
                     KEY_IS_USE + " TEXT," +
-                    KEY_CITY_NAME + " TEXT," +
                     KEY_SIDO_NAME + " TEXT," +
+                    KEY_CITY_NAME + " TEXT," +
                     KEY_HOUR + " INTEGER," +
                     KEY_MIN + " INTEGER," +
                     KEY_DAYS + " TEXT" +
@@ -94,7 +94,7 @@ public class AlarmDataController extends SQLiteOpenHelper{
         ArrayList<AlarmVO> list = new ArrayList<AlarmVO>();
 
         // Select All Query
-        String selectQuery = "SELECT  * FROM " + TABLE_NAME;
+        String selectQuery = "SELECT  * FROM " + TABLE_NAME + " ORDER BY " + KEY_ID + " DESC";
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
@@ -132,8 +132,8 @@ public class AlarmDataController extends SQLiteOpenHelper{
         String[] returnValue = {
                 KEY_ID,
                 KEY_IS_USE,
-                KEY_CITY_NAME,
                 KEY_SIDO_NAME,
+                KEY_CITY_NAME,
                 KEY_HOUR,
                 KEY_MIN,
                 KEY_DAYS
@@ -231,7 +231,6 @@ public class AlarmDataController extends SQLiteOpenHelper{
         Cursor cursor = db.rawQuery(countQuery, null);
         int cnt = cursor.getCount();
         cursor.close();
-
         // return count
         return cnt;
     }

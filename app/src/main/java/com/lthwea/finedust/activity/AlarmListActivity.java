@@ -19,6 +19,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.lthwea.finedust.R;
+import com.lthwea.finedust.cnst.MapConst;
 import com.lthwea.finedust.controller.AlarmDataController;
 import com.lthwea.finedust.util.Utils;
 import com.lthwea.finedust.vo.AlarmVO;
@@ -31,8 +32,6 @@ import java.util.List;
 
 public class AlarmListActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
 
-    public static String ALARM_ID_FOR_UPDATE_TAG = "ALARM_ID_FOR_UPDATE";       // list -> activity 로 수정시 db id값을 넘겨주기 위함
-    public static String ALARM_IS_UPDATE_TAG = "ALARM_IS_UPDATE";
 
 
     private static String TAG = "AlarmListActivity";
@@ -45,6 +44,7 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
 
     AlarmVoAdapter voAdapter;
     ListView listView;
+    List<AlarmVO> voList;
 
     //boolean[] test = new boolean[]{ false, false, false, false, false, false, false};
 
@@ -70,7 +70,7 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
 
         db = new AlarmDataController(this);
 
-        List<AlarmVO> voList = db.selectAllData();
+        voList = db.selectAllData();
         listView = (ListView)findViewById(R.id.listView);
 
         voAdapter = new AlarmVoAdapter(this, R.layout.alarm_list_item, voList);
@@ -122,7 +122,7 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
 
 
 
-
+//        checkIntentData();
 
 
     }
@@ -133,10 +133,13 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
         Log.d("onClick", "??");
 
         if(v.getId() == R.id.ibtn_alarm_list_back){
-            this.finish();
+            finish();
         }else if(v.getId() == R.id.ibtn_alarm_list_add){
+
+            MapConst.intentVO.setAlarmAdd(true);
             Intent intent = new Intent(this, AlarmActivity.class);
-            startActivityForResult(intent, MainActivity.INTENT_ALARM_CODE);
+            startActivity(intent);
+
         }
 
     }
@@ -145,9 +148,11 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
         AlarmVO vo = voAdapter.getItem(position);
+
+        MapConst.intentVO.setAlarmAdd(false);
+        MapConst.intentVO.setAlarmVoId(vo.getId());
+
         Intent intent = new Intent(this, AlarmActivity.class);
-        intent.putExtra(ALARM_ID_FOR_UPDATE_TAG, vo.getId());
-        intent.putExtra(ALARM_IS_UPDATE_TAG, true);
         startActivity(intent);
 
     }
@@ -238,31 +243,64 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
     }
 */
 
+/*
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (data != null) {
-            Log.d("onActivityResult", "-> " + requestCode + ", " + requestCode + ", " + data.getStringExtra("isSetLocation"));
+        Log.d("onActivityResult", "LIST " + requestCode + " " +  resultCode);
 
-            if (requestCode == MainActivity.INTENT_ALARM_CODE) {
-                if ("Y".equals(data.getStringExtra("isSetLocation"))) {
+        //2, 4
+        if(requestCode == MapConst.I_LIST_TO_ALARM_REQ_CODE && resultCode == MapConst.I_ALARM_TO_MAIN_RES_CODE){      // pass value
+
+            if(data != null){
+                if ("Y".equals(data.getStringExtra(MapConst.ALARM_IS_SET_LOCATION_TAG))) {
                     Intent intent = getIntent();
-                    intent.putExtra("isSetLocation", "Y");
-                    setResult(MainActivity.INTENT_ALARM_CODE, intent);
+                    intent.putExtra(MapConst.ALARM_IS_SET_LOCATION_TAG, "Y");
+                    setResult(MapConst.I_LIST_TO_MAIN_RES_CODE, intent);
                     finish();
                 }
             }
-        }else{
-            Log.e("onActivityResult", resultCode + " " + data);
-        }
 
+    }else if(resultCode == MapConst.I_ALARM_TO_LIST_RES_CODE){
+        Log.d(this.getLocalClassName(), "onActivityResult 알람 설정이 변경된 경우 listview를 업데이트 해야한다.");
     }
 
+
+    }
+*/
+
+/*
+
+    public void checkIntentData(){
+        Intent i = getIntent();
+        String isChagned = i.getStringExtra(MapConst.ALARM_IS_CHANGE_TAG);
+        if ( "Y".equals(isChagned)){
+            Log.d(this.getLocalClassName(), "onActivityResult 알람 설정이 변경된 경우 listview를 업데이트 해야한다.");
+        }
+    }
+
+*/
 
     @Override
     protected void onResume() {
         super.onResume();
+
+
+        if(MapConst.intentVO.isAlarmMarker()){
+            this.finish();
+        }else if (MapConst.intentVO.isUpdatedOrDeleted()){
+
+            Log.d("onResume", "isUpdatedOrDeleted");
+            MapConst.intentVO.setUpdatedOrDeleted(false);
+            voAdapter.clear();
+            voList = db.selectAllData();
+            voAdapter = new AlarmVoAdapter(this, R.layout.alarm_list_item, voList);
+            listView.setAdapter(voAdapter);
+            listView.setOnItemClickListener(this);
+
+        }
+
 
     }
 }

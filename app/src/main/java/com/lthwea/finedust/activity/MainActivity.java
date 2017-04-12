@@ -29,7 +29,6 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -98,7 +97,6 @@ public class MainActivity extends AppCompatActivity
 
 
     private PrefController pref;
-    public static int INTENT_ALARM_CODE = 0;
 
 
     private Toolbar toolbar;
@@ -106,10 +104,9 @@ public class MainActivity extends AppCompatActivity
     public int actionBarHeight;
     public LinearLayout ll_status;
 
-
+   // private boolean IS_GPS_USE = false;
 
 //    private long APP_RUN_TIME_MILLIS = 0;
-
 
 
     @Override
@@ -119,7 +116,8 @@ public class MainActivity extends AppCompatActivity
 
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle("전국 미세먼지 정보");;
+        toolbar.setTitle("전국 미세먼지 정보");
+        ;
         setSupportActionBar(toolbar);
 
 
@@ -143,7 +141,6 @@ public class MainActivity extends AppCompatActivity
         Log.d("MainActivity", "onCreate: call");
 
 
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -153,18 +150,15 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
 
-        if(isDustType) navigationView.getMenu().getItem(0).getSubMenu().getItem(0).setChecked(true);
-        else           navigationView.getMenu().getItem(0).getSubMenu().getItem(1).setChecked(true);
+        if (isDustType)
+            navigationView.getMenu().getItem(0).getSubMenu().getItem(0).setChecked(true);
+        else navigationView.getMenu().getItem(0).getSubMenu().getItem(1).setChecked(true);
 
 
         // firebase FCM
        /* FirebaseMessaging.getInstance().subscribeToTopic("news");
         FirebaseInstanceId.getInstance().getToken();*/
 
-        // Google Map current My location Perminssion check
-        if (android.os.Build.VERSION.SDK_INT >= M) {
-            checkLocationPermission();
-        }
 
         // Google Map Setting
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(map);
@@ -191,6 +185,8 @@ public class MainActivity extends AppCompatActivity
         }
 
 
+
+
        /* for(int i = 0; i < MapConst.testList.size() ; i++){
 
             String tmp = (String) MapConst.testList.get(i);
@@ -200,7 +196,6 @@ public class MainActivity extends AppCompatActivity
 
         }*/
 
-
     }
 
     @Override
@@ -208,7 +203,7 @@ public class MainActivity extends AppCompatActivity
         Log.d("  MainActivity", "onMapReady: call");
 
         mMap = googleMap;
-        mMap.setPadding(0, actionBarHeight + 30 , 0, 0);
+        mMap.setPadding(0, actionBarHeight + 30, 0, 0);
 
         //주소로 위도경도 구하기
         geocoder = new Geocoder(this);
@@ -217,7 +212,6 @@ public class MainActivity extends AppCompatActivity
         mMap.setMaxZoomPreference(DEFAULT_MIN_ZOOM_LEVEL);
         // disable rotation
         mMap.getUiSettings().setRotateGesturesEnabled(false);
-
 
 
         // 구글맵 터치시 발생하는 리스너 등록
@@ -256,23 +250,28 @@ public class MainActivity extends AppCompatActivity
         mClusterManager.cluster();
 
 
+        /*if (android.os.Build.VERSION.SDK_INT >= M) {
+            //User has previously accepted this permission
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                setMyLocationEnabled(true);
+                Log.d("checkLocationPermission", "onMapReady");
+            }
+        } else {
+            //Not in api-23, no need to prompt
+            setMyLocationEnabled(true);
+        }*/
+
+        // Google Map current My location Perminssion check
+        if (android.os.Build.VERSION.SDK_INT >= M) {
+            Log.d("PermissionsResult", "oncreate");
+            checkLocationPermission();
+        }
+
         //가장 가까운 지역의 정보로 이동
         LatLng l = moveCameraPostion();
 
         //가장 가까운 지역 정보 토스트
         showNearLocationInfoToast(l.latitude, l.longitude);
-
-
-        if (android.os.Build.VERSION.SDK_INT >= M) {
-            //User has previously accepted this permission
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                setMyLocationEnabled(true);
-            }
-        } else {
-            //Not in api-23, no need to prompt
-            setMyLocationEnabled(true);
-        }
-
 
 
         mMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
@@ -288,12 +287,17 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+
+
     @Override
     protected void onRestart() {
         super.onRestart();
-        Log.d("onRestart", "..");
-        //addItems();
+        Log.d("onRestart", "onRestart");
+
+        checkIntentData();
+        MapConst.intentVO.setAlarmMarker(false);
     }
+
 
     private void addItems() {
         DataController dc = new DataController();
@@ -315,15 +319,14 @@ public class MainActivity extends AppCompatActivity
         }
         Log.e("MapConst.markerMap", "null or empty count : " + errCnt);
         Log.e("MapConst.markerMap", "mClusterManager size : " + norCnt);
-        MapConst.CURRENT_DATA_DATE     = (String) (MapConst.markerMap.get("서울강남구").getDataTime());
+        MapConst.CURRENT_DATA_DATE = (String) (MapConst.markerMap.get("서울강남구").getDataTime());
         MapConst.CURRENT_MARKER_NUMBER = norCnt;
 
     }
 
 
-
     // show near location info toast
-    public void showNearLocationInfoToast(double lat, double lng){
+    public void showNearLocationInfoToast(double lat, double lng) {
         String msg = Utils.getNearDistanceInfo(lat, lng);
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
@@ -411,7 +414,6 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
     /**
      * Navigation Item Event
      */
@@ -431,9 +433,8 @@ public class MainActivity extends AppCompatActivity
                 stopAlarmMarekrInMap();
             }
 
-            //Intent i = new Intent(this, AlarmActivity.class);
             Intent i = new Intent(this, AlarmListActivity.class);
-            startActivityForResult(i, INTENT_ALARM_CODE);
+            startActivity(i);
 
 
         } else if (id == R.id.mn_location) {
@@ -478,8 +479,8 @@ public class MainActivity extends AppCompatActivity
 
 
             String msg = "전국 " + MapConst.CURRENT_MARKER_NUMBER + "개 시군구\n미세먼지, 초미세먼지 정보\n";
-                    msg += "기준 : " + MapConst.CURRENT_DATA_DATE +"\n";
-                    msg += "제공 : 공공데이터포털";
+            msg += "기준 : " + MapConst.CURRENT_DATA_DATE + "\n";
+            msg += "제공 : 공공데이터포털";
 
             AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
             alertDialog.setTitle("데이터 정보");
@@ -492,17 +493,17 @@ public class MainActivity extends AppCompatActivity
                     });
             alertDialog.show();
 
-        }else if (id == R.id.mn_dust || id == R.id.mn_su_dust){
-            if(isSettingAlarmMarker){
+        } else if (id == R.id.mn_dust || id == R.id.mn_su_dust) {
+            if (isSettingAlarmMarker) {
                 stopAlarmMarekrInMap();
             }
 
-            if(isSettingInitMarker){
+            if (isSettingInitMarker) {
                 stopInitLocationInMap();
             }
 
-            if(id == R.id.mn_dust){
-                if(isDustType == false){
+            if (id == R.id.mn_dust) {
+                if (isDustType == false) {
                     isDustType = true;
                     toolbar.setTitle("전국 미세먼지 정보");
                     showToast("전국 미세먼지 정보입니다.");
@@ -510,12 +511,12 @@ public class MainActivity extends AppCompatActivity
                     changeTextViewStatus();
                     navigationView.getMenu().getItem(0).getSubMenu().getItem(0).setChecked(true);
                     navigationView.getMenu().getItem(0).getSubMenu().getItem(1).setChecked(false);
-                }else{
+                } else {
                     showToast("미세먼지 데이터 사용중 입니다.");
                 }
 
-            }else if(id == R.id.mn_su_dust){
-                if(isDustType == true){
+            } else if (id == R.id.mn_su_dust) {
+                if (isDustType == true) {
                     isDustType = false;
                     toolbar.setTitle("전국 초미세먼지 정보");
                     showToast("전국 초미세먼지 정보입니다.");
@@ -523,7 +524,7 @@ public class MainActivity extends AppCompatActivity
                     changeTextViewStatus();
                     navigationView.getMenu().getItem(0).getSubMenu().getItem(0).setChecked(false);
                     navigationView.getMenu().getItem(0).getSubMenu().getItem(1).setChecked(true);
-                }else{
+                } else {
                     showToast("초미세먼지 데이터 사용중 입니다.");
                 }
 
@@ -536,7 +537,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    public void updateClusterManager(){
+    public void updateClusterManager() {
 
         mClusterManager.clearItems();
         mMap.clear();
@@ -561,22 +562,40 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+/*
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (data != null) {
-            Log.d("onActivityResult", "-> " + requestCode + ", " + requestCode + ", " + data.getStringExtra("isSetLocation"));
+        Log.d("onActivityResult", "MAIN " + requestCode + " " +  resultCode);
 
-            if (requestCode == INTENT_ALARM_CODE) {
-                if ("Y".equals(data.getStringExtra("isSetLocation"))) {
-                    setAlarmMarkerInMap();
+        //0 3
+        //1 4
+        if ((requestCode == MapConst.I_MAIN_TO_LIST_REQ_CODE && resultCode == MapConst.I_LIST_TO_MAIN_RES_CODE) ||
+                (requestCode == MapConst.I_MAIN_TO_ALARM_REQ_CODE && resultCode == MapConst.I_ALARM_TO_MAIN_RES_CODE) ||
+                (requestCode == MapConst.I_MAIN_TO_ALARM_REQ_CODE && resultCode == MapConst.I_MAIN_TO_LIST_REQ_CODE)) {
+            {
+                if (data != null) {
+                    if ("Y".equals(data.getStringExtra(MapConst.ALARM_IS_SET_LOCATION_TAG))) {
+                        setAlarmMarkerInMap();
+                    }
                 }
+
             }
-        }else{
-            Log.e("onActivityResult", resultCode + " " + data);
         }
     }
+*/
 
+
+
+
+    /*public void checkAlarmIntentData(){
+        Intent intent = getIntent();
+        String isSetAlarmLocation = intent.getStringExtra(MapConst.ALARM_IS_SET_LOCATION_TAG);
+        if("Y".equals(isSetAlarmLocation)){
+            setAlarmMarkerInMap();
+        }
+    }*/
 
     @Override
     public void onInfoWindowClick(Marker marker) {
@@ -594,14 +613,12 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
-
     public void setAlarmMarkerInMap() {
         isSettingAlarmMarker = true;
 
         LatLng location = moveCameraPostion();
         MarkerOptions marker = new MarkerOptions();
-        marker  .position(location)
+        marker.position(location)
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.ico_map_marker1))
                 .title("알림 받을 지역을 선택합니다.")
                 .snippet("마커를 롱클릭 후 드래그하여 이동해주세요.")
@@ -611,7 +628,7 @@ public class MainActivity extends AppCompatActivity
         getAlarmMarker().showInfoWindow();
 
 
-        if(checkLocationPermission()){
+        if (checkLocationPermission()) {
             popAlarmMarkerDialog(location.latitude, location.longitude);
         }
 
@@ -637,8 +654,8 @@ public class MainActivity extends AppCompatActivity
         setInitMarker(mMap.addMarker(marker));
         getInitMarker().showInfoWindow();
 
-        if (checkLocationPermission()){
-            popInitMarkerDialog(location.latitude, location.longitude, (double)DEFAULT_MIN_ZOOM_LEVEL);
+        if (checkLocationPermission()) {
+            popInitMarkerDialog(location.latitude, location.longitude, (double) DEFAULT_MIN_ZOOM_LEVEL);
         }
 
       /*  mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
@@ -686,7 +703,7 @@ public class MainActivity extends AppCompatActivity
     public void popInitMarkerDialog(final Double lat, final Double lng, final Double zoom) {
 
         String loc = Utils.getNearDistanceLocation(lat, lng);
-        String msg = "현재 위치에서 가장 가까운 측정지인\n"+  loc + "를\n시작위치로 설정하시겠습니까?";
+        String msg = "현재 위치에서 가장 가까운 측정지인\n" + loc + "를\n시작위치로 설정하시겠습니까?";
 
 
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -736,9 +753,11 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(getApplicationContext(), "시간과 요일을 선택해주세요.", Toast.LENGTH_SHORT).show();
                 stopAlarmMarekrInMap();
 
+                MapConst.intentVO.setLocName(location);
+
+
                 Intent i = new Intent(getApplicationContext(), AlarmActivity.class);
-                i.putExtra("ALARM_LOCATION", location);
-                startActivityForResult(i, INTENT_ALARM_CODE);
+                startActivity(i);
 
             }
         });
@@ -755,16 +774,20 @@ public class MainActivity extends AppCompatActivity
     *   Pref
     * */
     public LatLng moveCameraPostion() {
-
+        int i = 0;
+        Log.d("checkLocationPermission", ++i + "번째");
         LatLng userLocation = null;
 
-        if(checkLocationPermission() == true){
+        if (checkLocationPermission() == true) {
 
-            Toast.makeText(this, "현재 위치에서 가장 가까운 측정지로 이동합니다.", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "현재 위치에서 가장 가까운 측정지로 이동합니다.", Toast.LENGTH_SHORT).show();
 
 
-            LocationManager lm = (LocationManager)getSystemService(this.LOCATION_SERVICE);
-            Location myLocation = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            LocationManager lm = (LocationManager) getSystemService(this.LOCATION_SERVICE);
+            Location myLocation = lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+
+            //
+            //Location myLocation = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
             if (myLocation == null) {
                 Criteria criteria = new Criteria();
@@ -775,14 +798,18 @@ public class MainActivity extends AppCompatActivity
 
             Log.d("onMyLocationButtonClick", "call  " + myLocation);
 
-
-            if(myLocation!=null){
+            if (myLocation != null) {
                 LatLng l = Utils.getNearDistanceLatLng(myLocation.getLatitude(), myLocation.getLongitude());
                 userLocation = new LatLng(l.latitude, l.longitude);
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, DEFAULT_MYLOCATION_ZOOM_LEVEL), null);
+            } else {
+                showToast("현재 위치를 가져올 수 없습니다. \nGPS를 활성화 해주세요.\nGPS가 켜져있다면, 다시 실행해주세요.");
             }
 
-        }else {
+        }
+
+
+        if (userLocation == null) {
             userLocation = new LatLng(pref.getPrefInitMarkerLat(), pref.getPrefInitMarkerLng());
             mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
             CameraUpdate zoom = CameraUpdateFactory.zoomTo((int) pref.getPrefInitMarkerZoom());
@@ -795,10 +822,17 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
     public void setPrefInitMarkerDefaultValue() {
         pref.setPrefInitMarker(pref.DEFAULT_LAT, pref.DEFAULT_LNG, pref.DEFAULT_ZOOM);
         pref.setIsFirstInitMarker(false);
+    }
+
+
+    public void checkIntentData(){
+        boolean b = MapConst.intentVO.isAlarmMarker();
+        if(b == true){
+            setAlarmMarkerInMap();
+        }
     }
 
 
@@ -834,7 +868,6 @@ public class MainActivity extends AppCompatActivity
 
         return true;
     }
-
 
 
     /**
@@ -879,15 +912,14 @@ public class MainActivity extends AppCompatActivity
             //Bitmap icon = mIconGenerator.makeIcon();
             //markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(vo.getCityName());
 
-           // String str = vo.getSidoName() + " " + vo.getCityName() + " " + vo.getPm10Value();
+            // String str = vo.getSidoName() + " " + vo.getCityName() + " " + vo.getPm10Value();
             String str;
 
-            if(isDustType){
-                str  = vo.getCityName() + " " + vo.getPm10Value();
-            }else{
-                str  = vo.getCityName() + " " + vo.getPm25Value();
+            if (isDustType) {
+                str = vo.getCityName() + " " + vo.getPm10Value();
+            } else {
+                str = vo.getCityName() + " " + vo.getPm25Value();
             }
-
 
 
             String val = isDustType == true ? vo.getPm10Value() : vo.getPm25Value();
@@ -995,8 +1027,8 @@ public class MainActivity extends AppCompatActivity
         Log.d("onClusterItemClick", item.getSidoName() + "," + item.getCityName());
 
         String str = item.getSidoName() + " " + item.getCityName() + " 상세정보\n";
-        str += "미세먼지 : " +item.getPm10Value() +  "("+ Utils.getPm10ValueStatus(item.getPm10Value()) + ")\n";
-        str +=  "초미세먼지 : " +item.getPm25Value() +  "("+ Utils.getPm25ValueStatus(item.getPm25Value()) + ")\n";
+        str += "미세먼지 : " + item.getPm10Value() + "(" + Utils.getPm10ValueStatus(item.getPm10Value()) + ")\n";
+        str += "초미세먼지 : " + item.getPm25Value() + "(" + Utils.getPm25ValueStatus(item.getPm25Value()) + ")\n";
         str += "기준 : " + item.getDataTime();
         Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
 
@@ -1004,14 +1036,9 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
-
-
-
-
-
     private final long FINSH_INTERVAL_TIME = 2000;
     private long backPressedTime = 0;
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -1068,8 +1095,6 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
-
     public Marker getInitMarker() {
         return initMarker;
     }
@@ -1089,12 +1114,13 @@ public class MainActivity extends AppCompatActivity
 
 
 
-
-
-
-    // 구글맵 현재 위치
+    // gps 권한 동의
+    // https://developers.google.com/android/guides/permissions
     public boolean checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+       /* Log.d("checkLocationPermission", "checkLocationPermission");
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
 
@@ -1113,40 +1139,86 @@ public class MainActivity extends AppCompatActivity
                         MY_PERMISSIONS_REQUEST_LOCATION);
             }
             return false;
+        }
+        else {
+            return true;
+        }*/
+
+        Log.d("PermissionsResult", "checkLocationPermission");
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Check Permissions Now
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION);
+            Log.d("PermissionsResult", "false" );
+            return false;
         } else {
+            // permission has been granted, continue as usual
+            Log.d("PermissionsResult", "true mMap : " + mMap);
+            if(mMap != null){
+                mMap.setMyLocationEnabled(true);
+            }
             return true;
         }
+
+
     }
 
+    private static final int REQUEST_LOCATION = 2;
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
+        Log.d("PermissionsResult", requestCode + " ");
+
+        /*switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_LOCATION: {
                 // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0  && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted
-                    setMyLocationEnabled(true);
+                    Log.d("checkLocationPermission", "onRequestPermissionsResult");
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    mMap.setMyLocationEnabled(true);
+
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                     Toast.makeText(this, "위치 권한 동의를 거부하였습니다.", Toast.LENGTH_LONG).show();
+                    Log.d("checkLocationPermission", "위치 권한 동의를 거부하였습니다.");
                 }
                 return;
             }
+        }*/
 
-        }
-    }
+        if (requestCode == REQUEST_LOCATION) {
+            if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // We can now safely use the API we requested access to
+                // permission has been granted, continue as usual
+                Log.d("PermissionsResult", "권한동의");
+                moveCameraPostion();
+            } else {
+                // Permission was denied or request was cancelled
+                Log.d("PermissionsResult", "권한동의실");
 
-    public void setMyLocationEnabled(boolean b){
-        if( mMap != null){
-            if( checkLocationPermission()){
-                mMap.setMyLocationEnabled(b);
-                mMap.getUiSettings().setMyLocationButtonEnabled(b);
             }
+        }else{
+
         }
+
     }
+
+
 
 
     public void changeTextViewStatus(){
