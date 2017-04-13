@@ -295,7 +295,7 @@ public class MainActivity extends AppCompatActivity
         Log.d("onRestart", "onRestart");
 
         checkIntentData();
-        MapConst.intentVO.setAlarmMarker(false);
+
     }
 
 
@@ -754,11 +754,8 @@ public class MainActivity extends AppCompatActivity
                 stopAlarmMarekrInMap();
 
                 MapConst.intentVO.setLocName(location);
-
-
-                Intent i = new Intent(getApplicationContext(), AlarmActivity.class);
+                Intent i = new Intent(getApplicationContext(), AlarmListActivity.class);
                 startActivity(i);
-
             }
         });
         builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
@@ -833,6 +830,7 @@ public class MainActivity extends AppCompatActivity
         if(b == true){
             setAlarmMarkerInMap();
         }
+        MapConst.intentVO.setAlarmMarker(false);
     }
 
 

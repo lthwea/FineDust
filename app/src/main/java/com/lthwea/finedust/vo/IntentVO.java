@@ -7,7 +7,7 @@ package com.lthwea.finedust.vo;
 public class IntentVO {
 
 
-    // true = make marker, false = noen, map
+    // true = make marker, false = none, map
     private boolean isAlarmMarker;
     // if isAlarmMarker true, this has a value;
     private String locName;

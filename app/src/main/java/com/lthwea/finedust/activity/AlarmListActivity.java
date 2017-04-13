@@ -133,7 +133,9 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
         Log.d("onClick", "??");
 
         if(v.getId() == R.id.ibtn_alarm_list_back){
+
             finish();
+
         }else if(v.getId() == R.id.ibtn_alarm_list_add){
 
             MapConst.intentVO.setAlarmAdd(true);
@@ -289,7 +291,10 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
 
         if(MapConst.intentVO.isAlarmMarker()){
             this.finish();
-        }else if (MapConst.intentVO.isUpdatedOrDeleted()){
+        }else if(MapConst.intentVO.isAlarmMarking()){
+            Intent intent = new Intent(this, AlarmActivity.class);
+            startActivity(intent);
+        }else {
 
             Log.d("onResume", "isUpdatedOrDeleted");
             MapConst.intentVO.setUpdatedOrDeleted(false);

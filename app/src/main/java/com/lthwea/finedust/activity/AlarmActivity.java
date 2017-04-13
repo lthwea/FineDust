@@ -213,7 +213,6 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 
             MapConst.intentVO.setAlarmMarker(true);
             MapConst.intentVO.setCheckedDays(ALARM_DAYS);
-
             MapConst.intentVO.setAlarmMarking(true);
             finish();
 
@@ -265,8 +264,8 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                             ALARM_LOCATION = null;
 
 
-                            Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
-                            startActivity(intent);
+                            /*Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
+                            startActivity(intent);*/
                             finish();
 
 
@@ -292,7 +291,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 
         }else if(  id == R.id.ibtn_alarm_back ){
 
-            if(MapConst.intentVO.isAlarmMarking()){
+            /*if(MapConst.intentVO.isAlarmMarking()){
                 MapConst.intentVO.setAlarmMarking(false);
                 Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
                 startActivity(intent);
@@ -300,6 +299,10 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
             }else{
                 this.finish();
             }
+            */
+
+            this.finish();
+
             /*Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
             startActivity(intent);
             */
@@ -534,7 +537,15 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
         IS_UPDATE = !MapConst.intentVO.isAlarmAdd();
         ALARM_ID = MapConst.intentVO.getAlarmVoId();
         ALARM_LOCATION = MapConst.intentVO.getLocName();
-        ALARM_DAYS = MapConst.intentVO.getCheckedDays();
+
+
+
+        if(  MapConst.intentVO.isAlarmMarking() == true){
+            MapConst.intentVO.setAlarmMarker(false);
+            ALARM_DAYS = MapConst.intentVO.getCheckedDays();
+        }
+
+
     }
 
 
