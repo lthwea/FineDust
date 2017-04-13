@@ -2,7 +2,7 @@ package com.lthwea.finedust.controller;
 
 import android.util.Log;
 
-import com.lthwea.finedust.cnst.MapConst;
+import com.lthwea.finedust.cnst.MyConst;
 import com.lthwea.finedust.vo.MarkerVO;
 
 import org.json.JSONArray;
@@ -187,7 +187,7 @@ public class DataController {
                 for(int j = 0 ; j < jsonArray.length() ; j++){
                     JSONObject tmp = (JSONObject) jsonArray.get(j);
                     String key = tmp.get("sidoName")+ "" +tmp.get("cityName");
-                    MarkerVO vo = MapConst.markerMap.get(key);
+                    MarkerVO vo = MyConst.markerMap.get(key);
                     vo.setPm10Value((String) tmp.get("pm10Value"));
                     vo.setPm25Value((String) tmp.get("pm25Value"));
                     vo.setSo2Value((String) tmp.get("so2Value"));
@@ -195,7 +195,7 @@ public class DataController {
                     vo.setNo2Value((String) tmp.get("no2Value"));
                     vo.setCoValue((String) tmp.get("coValue"));
                     vo.setDataTime((String) tmp.get("dataTime"));
-                    MapConst.markerMap.put(key, vo);
+                    com.lthwea.finedust.cnst.MyConst.markerMap.put(key, vo);
                 }
             }
 

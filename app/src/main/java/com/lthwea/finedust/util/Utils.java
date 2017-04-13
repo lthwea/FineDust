@@ -1,13 +1,20 @@
 package com.lthwea.finedust.util;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.lthwea.finedust.cnst.MapConst;
+import com.lthwea.finedust.alarm.MyAlarmReceiver;
+import com.lthwea.finedust.cnst.MyConst;
 import com.lthwea.finedust.controller.AlarmDataController;
 import com.lthwea.finedust.vo.AlarmVO;
 import com.lthwea.finedust.vo.MarkerVO;
 
+import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
@@ -26,11 +33,11 @@ public class Utils {
         String nearDistanceLocation = "";
         double minDistance = 99999999999999999999.0;
 
-        Iterator<String> keys = MapConst.markerMap.keySet().iterator();
+        Iterator<String> keys = com.lthwea.finedust.cnst.MyConst.markerMap.keySet().iterator();
         while ( keys.hasNext() ) {
 
             String key = keys.next();
-            MarkerVO vo = MapConst.markerMap.get(key);
+            MarkerVO vo = MyConst.markerMap.get(key);
             LatLng l = vo.getPosition();
             Double lat2 = l.latitude;
             Double lon2 = l.longitude;
@@ -55,12 +62,12 @@ public class Utils {
         LatLng nearDistanceLatLng = null;
         double minDistance = 99999999999999999999.0;
 
-        Iterator<String> keys = MapConst.markerMap.keySet().iterator();
+        Iterator<String> keys = com.lthwea.finedust.cnst.MyConst.markerMap.keySet().iterator();
 
         while ( keys.hasNext() ) {
 
             String key = keys.next();
-            MarkerVO vo = MapConst.markerMap.get(key);
+            MarkerVO vo = com.lthwea.finedust.cnst.MyConst.markerMap.get(key);
 
             Log.d("getNearDistanceLatLng", key + "\t" + vo.getPm10Value() + " ");
 
@@ -93,12 +100,12 @@ public class Utils {
 
         double minDistance = 99999999999999999999.0;
 
-        Iterator<String> keys = MapConst.markerMap.keySet().iterator();
+        Iterator<String> keys = com.lthwea.finedust.cnst.MyConst.markerMap.keySet().iterator();
 
         while ( keys.hasNext() ) {
 
             String key = keys.next();
-            MarkerVO vo = MapConst.markerMap.get(key);
+            MarkerVO vo = com.lthwea.finedust.cnst.MyConst.markerMap.get(key);
 
             //Log.d("getNearDistanceLatLng", key + "\t" + vo.getPm10Value() + " ");
 
@@ -264,6 +271,86 @@ public class Utils {
             Log.d("printDBData", vo.toString());
         }
     }
+
+
+
+    public static boolean[] getBooleanArrayDays(String str){
+        boolean[] ALARM_DAYS = new boolean[]{
+                false,false,false,false,false,false,false
+        };
+
+        if(str != null){
+            String[] tmp = str.split(" ");
+            for(int i = 0 ; i < tmp.length ; i++){
+                String s = tmp[i];
+                if("월".equals(s)) ALARM_DAYS[0] = true;
+                else if("화".equals(s)) ALARM_DAYS[1] = true;
+                else if("수".equals(s)) ALARM_DAYS[2] = true;
+                else if("목".equals(s)) ALARM_DAYS[3] = true;
+                else if("금".equals(s)) ALARM_DAYS[4] = true;
+                else if("토".equals(s)) ALARM_DAYS[5] = true;
+                else if("일".equals(s)) ALARM_DAYS[6] = true;
+            }
+        }
+
+        return ALARM_DAYS;
+    }
+
+
+
+
+    public static void addAlarm(Context context, AlarmVO vo){
+
+
+        Intent alarmIntent = new Intent(context, MyAlarmReceiver.class);
+        alarmIntent.putExtra(MyConst.ID_ALARM_INTENT_TAG, vo.getId());
+        alarmIntent.putExtra(MyConst.SIDO_ALARM_INTENT_TAG, vo.getSidoName());
+        alarmIntent.putExtra(MyConst.CITY_ALARM_INTENT_TAG, vo.getCityName());
+        alarmIntent.putExtra(MyConst.DAYS_ALARM_INTENT_TAG, getBooleanArrayDays(vo.getDays()));
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, vo.getHour());
+        calendar.set(Calendar.MINUTE, vo.getMin());
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        PendingIntent pi = PendingIntent.getBroadcast(context, vo.getId(), alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(vo.getHour(), vo.getMin()), pi);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(vo.getHour(), vo.getMin()), pi);
+        } else {
+            alarmManager.set(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(vo.getHour(), vo.getMin()), pi);
+        }
+
+        Log.d("AlarmManager", "add\t" + vo.toString());
+
+    }
+
+
+    public static void deleteAlarm(Context context, int id){
+
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, MyAlarmReceiver.class);
+        PendingIntent sender = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        if (sender != null) {
+            am.cancel(sender);
+            sender.cancel();
+        }
+
+        Log.d("AlarmManager", "delete\t" + id);
+
+    }
+
+    public static void updateAlarm(Context context, AlarmVO vo){
+        Log.d("AlarmManager", "update\t" + vo);
+
+        deleteAlarm(context, vo.getId());
+        addAlarm(context, vo);
+    }
+
 
 
 }

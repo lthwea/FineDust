@@ -13,13 +13,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import com.lthwea.finedust.R;
-import com.lthwea.finedust.cnst.MapConst;
+import com.lthwea.finedust.cnst.MyConst;
 import com.lthwea.finedust.controller.AlarmDataController;
 import com.lthwea.finedust.util.Utils;
 import com.lthwea.finedust.vo.AlarmVO;
@@ -82,49 +83,6 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
         Utils.printDBData(db);
         Log.d("getDataCount", db.getDataCount() + " ");
 
-
-        /*AlarmVO vo = new AlarmVO(0, "Y", "서울", "강남구", 15, 30, "월 일");
-        AlarmVO vo2 = new AlarmVO(1, "Y", "서울", "도봉구", 13, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo3 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo4 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo5 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo6 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo7 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo8 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo9 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo10 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo11 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo12 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo13 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo14 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo15 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo16 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        AlarmVO vo17 = new AlarmVO(2, "N", "서울", "서초구구", 01, 30, "월 화 수 목 금 토 일");
-        voList.add(vo);
-        voList.add(vo2);
-        voList.add(vo3);
-        voList.add(vo4);
-        voList.add(vo5);
-        voList.add(vo6);
-        voList.add(vo7);
-        voList.add(vo8);
-        voList.add(vo9);
-        voList.add(vo10);
-        voList.add(vo11);
-        voList.add(vo12);
-        voList.add(vo13);
-        voList.add(vo14);
-        voList.add(vo15);
-        voList.add(vo16);
-        voList.add(vo17);*/
-
-
-
-
-
-//        checkIntentData();
-
-
     }
 
     @Override
@@ -137,8 +95,8 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
             finish();
 
         }else if(v.getId() == R.id.ibtn_alarm_list_add){
-
-            MapConst.intentVO.setAlarmAdd(true);
+            MyConst.intentVO.setInitData();
+            MyConst.intentVO.setAlarmAdd(true);
             Intent intent = new Intent(this, AlarmActivity.class);
             startActivity(intent);
 
@@ -148,11 +106,12 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Log.d("onItemClick", id + " ");
 
         AlarmVO vo = voAdapter.getItem(position);
 
-        MapConst.intentVO.setAlarmAdd(false);
-        MapConst.intentVO.setAlarmVoId(vo.getId());
+        MyConst.intentVO.setAlarmAdd(false);
+        MyConst.intentVO.setAlarmVoId(vo.getId());
 
         Intent intent = new Intent(this, AlarmActivity.class);
         startActivity(intent);
@@ -163,20 +122,28 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
     private class AlarmVoAdapter extends ArrayAdapter<AlarmVO> {
 
         private int layoutResource;
+        TextView tv_alarm_item_loc;
+        TextView tv_alarm_item_time;
+        TextView tv_alarm_item_day;
+        Switch sw;
+
+        boolean flag = false;
 
 
         public AlarmVoAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<AlarmVO> objects) {
             super(context, resource, objects);
             this.layoutResource = resource;
+
+
         }
 
         @NonNull
         @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
             //return super.getView(position, convertView, parent);
+            Log.d("getView", position + " ");
 
             View view = convertView;
-
             if (view == null) {
                 LayoutInflater layoutInflater = LayoutInflater.from(getContext());
                 view = layoutInflater.inflate(layoutResource, null);
@@ -184,10 +151,14 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
 
             AlarmVO vo = getItem(position);
             if (vo != null) {
+
                 TextView tv_alarm_item_loc = (TextView) view.findViewById(R.id.tv_alarm_item_loc);
                 TextView tv_alarm_item_time = (TextView) view.findViewById(R.id.tv_alarm_item_time);
                 TextView tv_alarm_item_day = (TextView) view.findViewById(R.id.tv_alarm_item_day);
-                Switch sw = (Switch) view.findViewById(R.id.sw_alarm_item_isuse);
+                final Switch sw = (Switch) view.findViewById(R.id.sw_alarm_item_isuse);
+
+
+
 
                 if (tv_alarm_item_loc != null) {
                     tv_alarm_item_loc.setText(vo.getSidoName() + " " + vo.getCityName());
@@ -208,13 +179,99 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
                     }else{
                         sw.setChecked(false);
                     }
+                    sw.setOnClickListener(new View.OnClickListener(){
+
+                        @Override
+                        public void onClick(View v) {
+                            AlarmVO vo = getItem(position);
+                            if(sw.isChecked()){
+                                vo.setIsUse("Y");
+                                db.updateData(vo);
+                                Utils.addAlarm(getApplicationContext(), vo);
+                            }else{
+                                vo.setIsUse("N");
+                                db.updateData(vo);
+                                Utils.deleteAlarm(getApplicationContext(), vo.getId());
+                            }
+                        }
+                    });
+
+
+                    sw.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            /*AlarmVO vo = getItem(position);
+                            Log.d("TESTTEST", vo.getId() + " " +  isChecked + "");
+
+                            if(isChecked){
+                                vo.setIsUse("Y");
+                                db.updateData(vo);
+                                Utils.addAlarm(getApplicationContext(), vo);
+                            }else{
+                                vo.setIsUse("N");
+                                db.updateData(vo);
+                                Utils.deleteAlarm(getApplicationContext(), vo.getId());
+                            }*/
+
+                        }
+                    });
+
 
                 }
+
             }
+
+
+
 
             return view;
         }
     }
+
+    /*public void test(final boolean isChecked, final AlarmVO vo){
+        sw.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, final boolean isChecked) {
+                String msg = "";
+                if(isChecked == false){
+                    msg = "미세먼지 알람을 해제하시겠습니까?";
+                }else{
+                    msg = "미세먼지 알람을 받으시겠습니까?";
+                }
+
+                Log.d("CheckedChangeListener", msg + " " + isChecked);
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext());
+                builder.setTitle("미세먼지 알람");
+                builder.setCancelable(true);
+                builder.setMessage(msg);
+                builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (isChecked == false) {
+                            Utils.deleteAlarm(getApplicationContext(), vo.getId());
+                        } else {
+                            Utils.addAlarm(getApplicationContext(), vo);
+                        }
+
+                        dialog.dismiss();
+                    }
+                });
+                builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (isChecked == false) {
+                            sw.setChecked(true);
+                        } else {
+                            sw.setChecked(false);
+                        }
+                        dialog.dismiss();
+                    }
+                });
+                builder.show();
+            }
+        });
+    }*/
 
 
 /*
@@ -253,18 +310,18 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
         Log.d("onActivityResult", "LIST " + requestCode + " " +  resultCode);
 
         //2, 4
-        if(requestCode == MapConst.I_LIST_TO_ALARM_REQ_CODE && resultCode == MapConst.I_ALARM_TO_MAIN_RES_CODE){      // pass value
+        if(requestCode == MyConst.I_LIST_TO_ALARM_REQ_CODE && resultCode == MyConst.I_ALARM_TO_MAIN_RES_CODE){      // pass value
 
             if(data != null){
-                if ("Y".equals(data.getStringExtra(MapConst.ALARM_IS_SET_LOCATION_TAG))) {
+                if ("Y".equals(data.getStringExtra(MyConst.ALARM_IS_SET_LOCATION_TAG))) {
                     Intent intent = getIntent();
-                    intent.putExtra(MapConst.ALARM_IS_SET_LOCATION_TAG, "Y");
-                    setResult(MapConst.I_LIST_TO_MAIN_RES_CODE, intent);
+                    intent.putExtra(MyConst.ALARM_IS_SET_LOCATION_TAG, "Y");
+                    setResult(MyConst.I_LIST_TO_MAIN_RES_CODE, intent);
                     finish();
                 }
             }
 
-    }else if(resultCode == MapConst.I_ALARM_TO_LIST_RES_CODE){
+    }else if(resultCode == MyConst.I_ALARM_TO_LIST_RES_CODE){
         Log.d(this.getLocalClassName(), "onActivityResult 알람 설정이 변경된 경우 listview를 업데이트 해야한다.");
     }
 
@@ -276,7 +333,7 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
 
     public void checkIntentData(){
         Intent i = getIntent();
-        String isChagned = i.getStringExtra(MapConst.ALARM_IS_CHANGE_TAG);
+        String isChagned = i.getStringExtra(MyConst.ALARM_IS_CHANGE_TAG);
         if ( "Y".equals(isChagned)){
             Log.d(this.getLocalClassName(), "onActivityResult 알람 설정이 변경된 경우 listview를 업데이트 해야한다.");
         }
@@ -287,24 +344,29 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d("TESTTEST", "onResume" + MyConst.intentVO.getNeedListViewUpdate());
 
-
-        if(MapConst.intentVO.isAlarmMarker()){
+        if(MyConst.intentVO.isAlarmMarker()){
             this.finish();
-        }else if(MapConst.intentVO.isAlarmMarking()){
+        }else if(MyConst.intentVO.isAlarmMarking()){
             Intent intent = new Intent(this, AlarmActivity.class);
             startActivity(intent);
-        }else {
-
+        }else if(MyConst.intentVO.getNeedListViewUpdate()){
             Log.d("onResume", "isUpdatedOrDeleted");
-            MapConst.intentVO.setUpdatedOrDeleted(false);
+            MyConst.intentVO.setNeedListViewUpdate(false);
             voAdapter.clear();
             voList = db.selectAllData();
-            voAdapter = new AlarmVoAdapter(this, R.layout.alarm_list_item, voList);
-            listView.setAdapter(voAdapter);
-            listView.setOnItemClickListener(this);
-
+            for(AlarmVO vo : voList){
+                voAdapter.add(vo);
+            }
+            voAdapter.notifyDataSetChanged();
+            //listView.setAdapter(voAdapter);
+            //listView.setOnItemClickListener(this);
         }
+
+
+
+
 
 
     }

@@ -2,15 +2,23 @@ package com.lthwea.finedust.alarm;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.support.annotation.NonNull;
+import android.os.Bundle;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.lthwea.finedust.R;
 
 public class MyAlarmDialog extends Dialog {
-    public MyAlarmDialog(@NonNull Context context) {
-        super(context);
-    }
 
-    /*protected static int default_width = WindowManager.LayoutParams.WRAP_CONTENT; // 기본 폭
-    protected static int default_height = WindowManager.LayoutParams.WRAP_CONTENT;// 디폴트의 높이
+    protected static int default_width = WindowManager.LayoutParams.WRAP_CONTENT; // 默认宽度
+    protected static int default_height = WindowManager.LayoutParams.WRAP_CONTENT;// 默认高度
     public static int TYPE_TWO_BT = 2;
     public static int TYPE_NO_BT = 0;
     public TextView dialog_title;
@@ -26,19 +34,17 @@ public class MyAlarmDialog extends Dialog {
 
     public MyAlarmDialog(Context context, int style) {
         super(context, R.style.FullScreenDialog);
-
         mContext = context;
-        customView = LayoutInflater.from(context).inflate(R.layout.alarm_dialog_simple, null);
+        customView = LayoutInflater.from(context).inflate(R.layout.alarm_dialog, null);
 
         icon = (ImageView) customView.findViewById(R.id.icon);
 
         ll_button = (LinearLayout) customView.findViewById(R.id.ll_button);
         dialog_title = (TextView) customView.findViewById(R.id.dialog_title);
-        setTitle("알림");
+        setTitle("미세먼지 알람");
         dialog_message = (EditText) customView.findViewById(R.id.dialog_message);
         dialog_message.clearFocus();
         bt_confirm = (Button) customView.findViewById(R.id.dialog_confirm);
-
     }
 
     @Override
@@ -77,8 +83,7 @@ public class MyAlarmDialog extends Dialog {
         dialog_title.setVisibility(View.GONE);
         icon.setVisibility(View.VISIBLE);
         icon.setBackgroundResource(iconResId);
-
         return this;
-    }*/
+    }
 
 }

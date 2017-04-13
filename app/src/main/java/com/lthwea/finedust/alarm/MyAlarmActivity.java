@@ -2,10 +2,9 @@ package com.lthwea.finedust.alarm;
 
 import android.app.Activity;
 import android.app.Service;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Vibrator;
-import android.support.v7.app.AlertDialog;
+import android.view.View;
 
 import com.lthwea.finedust.R;
 
@@ -20,18 +19,18 @@ public class MyAlarmActivity extends Activity {
         setContentView(R.layout.alarm_activity_clock_alarm);
 
         String message = this.getIntent().getStringExtra("msg");
-        showDialogInBroadcastReceiver( message );
+        showAlarm( message );
 
     }
 
-    private void showDialogInBroadcastReceiver(String message) {
+    private void showAlarm(String message) {
 
 
         vibrator = (Vibrator) this.getSystemService(Service.VIBRATOR_SERVICE);
         vibrator.vibrate(1000);
         //vibrator.vibrate(new long[]{100, 10, 100, 100}, 0);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+     /*   AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("미세먼지 알림");
         builder.setCancelable(true);
         builder.setMessage(message);
@@ -40,10 +39,25 @@ public class MyAlarmActivity extends Activity {
             public void onClick(DialogInterface dialog, int which) {
                 vibrator.cancel();
                 dialog.dismiss();
-                System.exit(0);
+                finish();
             }
         });
-        builder.show();
+        builder.show();*/
+
+        final MyAlarmDialog dialog = new MyAlarmDialog(this, R.style.Theme_dialog);
+        dialog.show();
+        dialog.setTitle("미세먼지 알림");
+        dialog.setMessage(message);
+        dialog.setClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (dialog.bt_confirm == v ) {
+                    vibrator.cancel();
+                    dialog.dismiss();
+                    finish();
+                }
+            }
+        });
 
 
        /* final MyAlarmDialog dialog = new MyAlarmDialog(this, R.style.Theme_dialog);

@@ -2,7 +2,6 @@ package com.lthwea.finedust.activity;
 
 import android.app.TimePickerDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -17,7 +16,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.lthwea.finedust.R;
-import com.lthwea.finedust.cnst.MapConst;
+import com.lthwea.finedust.cnst.MyConst;
 import com.lthwea.finedust.controller.AlarmDataController;
 import com.lthwea.finedust.util.Utils;
 import com.lthwea.finedust.vo.AlarmVO;
@@ -25,20 +24,27 @@ import com.lthwea.finedust.vo.AlarmVO;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
+import static com.lthwea.finedust.util.Utils.addAlarm;
+import static com.lthwea.finedust.util.Utils.deleteAlarm;
+import static com.lthwea.finedust.util.Utils.updateAlarm;
+
 /**
  * Created by LeeTaeHun on 2017. 4. 7..
  */
 
-public class AlarmActivity extends AppCompatActivity implements View.OnClickListener
-{
+public class AlarmActivity extends AppCompatActivity implements View.OnClickListener {
 
-    // 이전 액티비티에서 인텐트로 가져옴
-    private boolean IS_UPDATE = false;       // update or add
-    private int ALARM_ID = 99;       // 99 is default value
+    /* View */
+    Button btn_alarm_completed;
+    TextView tv_alarm_loc, tv_alarm_time;
+    ToggleButton tbtn_0, tbtn_1, tbtn_2, tbtn_3, tbtn_4, tbtn_5, tbtn_6;
+    ImageButton ibtn_alarm_back, ibtn_alarm_delete;
 
+    /* Intent Flag */
+    private boolean IS_UPDATE = false;
+    private int ALARM_ID = MyConst.INTENT_DEFAULT_ID;
 
-
-
+    /* Data Value var*/
     private String ALARM_LOCATION = "";      // get intent value From MainActivity
     private String ALARM_TIME = "";
     private int ALARM_HOUR = 0;
@@ -47,32 +53,13 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
             false,false,false,false,false,false,false
     };
 
-   /* String[] days = new String[]{
-            "월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"
-            //0,       1,       2,       3,       4,      5,     6,
-    };*/
-
+    /* Data Vaild Flag*/
     private boolean isVaildLocation = false;
     private boolean isVaildTime = true;
     private boolean isVaildDay = false;
 
-
     /* SQLite */
     private AlarmDataController db;
-
-
-
-    //RelativeLayout rl_loc, rl_time;
-
-    Button btn_alarm_completed;
-    TextView tv_alarm_loc, tv_alarm_time;
-    ToggleButton tbtn_0, tbtn_1, tbtn_2, tbtn_3, tbtn_4, tbtn_5, tbtn_6;
-    ImageButton ibtn_alarm_back, ibtn_alarm_delete;
-
-    // String array for alert dialog multi choice items
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,12 +84,6 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
         ibtn_alarm_back.setOnClickListener(this);
         ibtn_alarm_delete.setOnClickListener(this);
 
-
-        Calendar cal = Calendar.getInstance();
-        ALARM_HOUR = cal.get(Calendar.HOUR_OF_DAY);
-        ALARM_MIN = cal.get(Calendar.MINUTE);
-        tv_alarm_time.setText( Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN) );
-
         tbtn_0 = (ToggleButton) findViewById(R.id.tbtn_mon);
         tbtn_1 = (ToggleButton) findViewById(R.id.tbtn_tue);
         tbtn_2 = (ToggleButton) findViewById(R.id.tbtn_wen);
@@ -119,262 +100,70 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
         tbtn_6.setOnClickListener(this);
 
 
+        Calendar cal = Calendar.getInstance();
+        ALARM_HOUR = cal.get(Calendar.HOUR_OF_DAY);
+        ALARM_MIN = cal.get(Calendar.MINUTE);
+        tv_alarm_time.setText( Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN) );
+
+        // get Connection
         db = new AlarmDataController(this);
 
-
-
         checkIntentData();
+
+        checkNewOrModify();
+
         changeUpdateUI();
+
         isVaildAlarmData();
 
 
-        AlarmVO vo = db.selectData(ALARM_ID);
-        Log.d("AlarmActivityIntent", "vo : " + vo.toString());
+    }
 
-        if(ALARM_ID != 9999 && vo != null){
+    public void checkIntentData(){
 
-            Log.d("ALARM_ID", ALARM_ID + " ");
+        IS_UPDATE = !MyConst.intentVO.isAlarmAdd();
+        ALARM_ID = MyConst.intentVO.getAlarmVoId();
+        Log.d("ALARM_ID", ALARM_ID + " ");
 
-            ALARM_LOCATION = vo.getSidoName() + " " + vo.getCityName();
-            ALARM_HOUR = vo.getHour();
-            ALARM_MIN = vo.getMin();
-            ALARM_TIME = Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN);
+        ALARM_LOCATION = MyConst.intentVO.getLocName();
 
-            isVaildLocation = true;
-            isVaildDay = true;
-
-            tv_alarm_loc.setText(ALARM_LOCATION);
-            tv_alarm_time.setText(ALARM_TIME);
-            convertStringToBooleanDays(vo.getDays());   // including UI Update
-            changeUpdateUI();
-            isVaildAlarmData();
-
-            MapConst.intentVO.setAlarmVoId(MapConst.INTENT_DEFAULT_ID);
+        if(  MyConst.intentVO.isAlarmMarking() == true){
+            ALARM_DAYS = MyConst.intentVO.getCheckedDays();
         }
-
-
-
- /*
-
-        btn_alarm_setting = (Button) findViewById(R.id.btn_alarm_setting);
-        btn_alarm_setting.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(pref.isAlarmUse()){
-                    cancelAlarm();      //삭제
-                }else{
-                    setAlarm();         //등록
-                }
-            }
-        });
-*/
-
-
-/*
-        pref = new PrefController(this);
-        if( !pref.isAlarmUse()){
-//            rl_loc.setClickable(true);
-//            rl_time.setClickable(true);
-
-//            findViewById(R.id.tv_alarm_arrow1).setVisibility(View.VISIBLE);
-//            findViewById(R.id.tv_alarm_arrow2).setVisibility(View.VISIBLE);
-//            findViewById(R.id.tv_alarm_arrow3).setVisibility(View.VISIBLE);
-
-
-            Log.d("ALARM_LOCATION", ALARM_LOCATION+ "   !!!   !!");
-
-        }else{
-//            rl_loc.setClickable(false);
-//            rl_time.setClickable(false);
-
-//            findViewById(R.id.tv_alarm_arrow1).setVisibility(View.INVISIBLE);
-//            findViewById(R.id.tv_alarm_arrow2).setVisibility(View.INVISIBLE);
-//            findViewById(R.id.tv_alarm_arrow3).setVisibility(View.INVISIBLE);
-
-//            ALARM_LOCATION = pref.getPrefIAlarmLocation();
-//            ALARM_TIME = pref.getPrefAlarmTime();
-//            ALARM_DAY = pref.getPrefIAlarmDay();*/
-
     }
 
 
+    public void checkNewOrModify(){
 
-        //checkAlarmData();
+        // get All data for list
+        if(ALARM_ID != MyConst.INTENT_DEFAULT_ID){
+            AlarmVO vo = db.selectData(ALARM_ID);
+            Log.d("AlarmActivityIntent", "vo : " + vo.toString());
 
+            Log.d("ALARM_ID", ALARM_ID + " ");
 
-
-    @Override
-    public void onClick(View v) {
-        Log.d("onClick", v.getId() + "  ");
-
-        int id = v.getId();
-
-        if( id == R.id.tv_alarm_loc ){
-
-            MapConst.intentVO.setAlarmMarker(true);
-            MapConst.intentVO.setCheckedDays(ALARM_DAYS);
-            MapConst.intentVO.setAlarmMarking(true);
-            finish();
-
-        }else if( id == R.id.tv_alarm_time ){
-
-            int hour, minute;
-
-            GregorianCalendar calendar = new GregorianCalendar();
-            hour = calendar.get(Calendar.HOUR_OF_DAY);
-            minute = calendar.get(Calendar.MINUTE);
-
-            new TimePickerDialog(AlarmActivity.this, timeSetListener, hour, minute, false).show();
-
-        }else if ( id == R.id.btn_alarm_completed ){
-
-            boolean isVaild = isVaildAlarmData();
-            if(isVaild){
-
-                if(!IS_UPDATE){
-
-                    //신규는 인서트
-
-                    String msg = "지역 : " + ALARM_LOCATION +
-                                 "\n시간 : " + Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN) +
-                                 "\n반복 요일 : " + getStringDaysFormat() +
-                                 "\n위 기준으로 미세먼지/초미세먼지 알림을 받으시겠습니까?";
-
-                            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("미세먼지 알람 설정");
-                    builder.setCancelable(true);
-                    builder.setMessage(msg);
-                    builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                            String[] sidoCity = ALARM_LOCATION.split(" ");
-                            int id = db.getDataCount();
-                            AlarmVO vo = new AlarmVO(id+1, "Y", sidoCity[0], sidoCity[1], ALARM_HOUR, ALARM_MIN, getStringDaysFormat());
-                            Log.d("insertDB", vo.toString());
-                            Log.d("insertDB", sidoCity[0]);
-                            Log.d("insertDB", sidoCity[1]);
-
-                            db.insertAlarmData(vo);
-                            Toast.makeText(AlarmActivity.this, "알람 등록이 완료되었습니다.", Toast.LENGTH_SHORT).show();
-                            //printDBData();
-
-
-                            MapConst.intentVO.setLocName(null);
-                            ALARM_LOCATION = null;
-
-
-                            /*Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
-                            startActivity(intent);*/
-                            finish();
-
-
-                        }
-                    });
-                    builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                        }
-                    });
-                    builder.show();
-                }else{
-
-
-                    //수정은 업데이트
-
-
-                }
-
+            if(MyConst.intentVO.isAlarmMarking()){
+                ALARM_LOCATION = MyConst.intentVO.getLocName();
+                String tmp = MyConst.intentVO.getAlarmTime();
+                ALARM_TIME = tmp;
+                ALARM_HOUR = Integer.parseInt(tmp.substring(3, 5));
+                ALARM_MIN = Integer.parseInt(tmp.substring(7, 8));
             }else{
-                Toast.makeText(this, "데이터를 선택하세요", Toast.LENGTH_SHORT).show();
+                ALARM_LOCATION = vo.getSidoName() + " " + vo.getCityName();
+                ALARM_HOUR = vo.getHour();
+                ALARM_MIN = vo.getMin();
+                ALARM_TIME = Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN);
             }
 
-        }else if(  id == R.id.ibtn_alarm_back ){
+            MyConst.intentVO.setAlarmMarking(false);
 
-            /*if(MapConst.intentVO.isAlarmMarking()){
-                MapConst.intentVO.setAlarmMarking(false);
-                Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
-                startActivity(intent);
-                this.finish();
-            }else{
-                this.finish();
-            }
-            */
+            isVaildLocation = true;
+            isVaildDay = true;
+            tv_alarm_loc.setText(ALARM_LOCATION);
+            tv_alarm_time.setText(ALARM_TIME);
+            convertStringToBooleanDays(vo.getDays());
 
-            this.finish();
-
-            /*Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
-            startActivity(intent);
-            */
-
-
-
-
-        }else if(  id == R.id.ibtn_alarm_delete ){
-            //삭제
-
-            String msg = "해당 알람을 삭제하시겠습니까?";
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("미세먼지 알람 설정");
-            builder.setCancelable(true);
-            builder.setMessage(msg);
-            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    db.deleteData(ALARM_ID);
-                    Toast.makeText(AlarmActivity.this, "삭제가 완료되었습니다.", Toast.LENGTH_SHORT).show();
-
-
-                    MapConst.intentVO.setUpdatedOrDeleted(true);
-//                    Intent intent = new Intent(getApplicationContext(), AlarmListActivity.class);
-//                    startActivity(intent);
-                    finish();
-
-
-                }
-            });
-            builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            });
-            builder.show();
         }
-
-        /* Toggle Button Event */
-        else if(id == R.id.tbtn_mon){
-            if( ALARM_DAYS[0] == false) ALARM_DAYS[0] = true;
-            else                         ALARM_DAYS[0] = false;
-            isVaildAlarmData();
-        }else if(id == R.id.tbtn_tue){
-            if( ALARM_DAYS[1] == false) ALARM_DAYS[1] = true;
-            else                         ALARM_DAYS[1] = false;
-            isVaildAlarmData();
-        }else if(id == R.id.tbtn_wen){
-            if( ALARM_DAYS[2] == false) ALARM_DAYS[2] = true;
-            else                         ALARM_DAYS[2] = false;
-            isVaildAlarmData();
-        }else if(id == R.id.tbtn_thu){
-            if( ALARM_DAYS[3] == false) ALARM_DAYS[3] = true;
-            else                         ALARM_DAYS[3] = false;
-            isVaildAlarmData();
-        }else if(id == R.id.tbtn_fri){
-            if( ALARM_DAYS[4] == false) ALARM_DAYS[4] = true;
-            else                         ALARM_DAYS[4] = false;
-            isVaildAlarmData();
-        }else if(id == R.id.tbtn_sat){
-            if( ALARM_DAYS[5] == false) ALARM_DAYS[5] = true;
-            else                         ALARM_DAYS[5] = false;
-            isVaildAlarmData();
-        }else if(id == R.id.tbtn_sun){
-            if( ALARM_DAYS[6] == false) ALARM_DAYS[6] = true;
-            else                         ALARM_DAYS[6] = false;
-            isVaildAlarmData();
-        }
-
-
-
     }
 
 
@@ -437,6 +226,194 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 
     }
 
+
+    @Override
+    public void onClick(View v) {
+        Log.d("onClick", v.getId() + "  ");
+
+        int id = v.getId();
+
+        if( id == R.id.tv_alarm_loc ){                           // location marker
+
+            MyConst.intentVO.setAlarmMarker(true);
+            MyConst.intentVO.setCheckedDays(ALARM_DAYS);
+            MyConst.intentVO.setAlarmTime(ALARM_TIME);
+            MyConst.intentVO.setAlarmMarking(true);
+            MyConst.intentVO.setNeedListViewUpdate(false);
+            finish();
+
+        }else if( id == R.id.tv_alarm_time ){                   // set time
+
+            int hour, minute;
+
+            GregorianCalendar calendar = new GregorianCalendar();
+            hour = calendar.get(Calendar.HOUR_OF_DAY);
+            minute = calendar.get(Calendar.MINUTE);
+
+            new TimePickerDialog(AlarmActivity.this, timeSetListener, hour, minute, false).show();
+
+        }else if ( id == R.id.btn_alarm_completed ){            // submit
+
+            boolean isVaild = isVaildAlarmData();
+            if(isVaild){
+
+                if(!IS_UPDATE){ // New
+
+                    String msg = "지역 : " + ALARM_LOCATION +
+                                 "\n시간 : " + Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN) +
+                                 "\n반복 요일 : " + getStringDaysFormat() +
+                                 "\n위 기준으로 미세먼지/초미세먼지 알림을 받으시겠습니까?";
+
+                            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("미세먼지 알람 설정");
+                    builder.setCancelable(true);
+                    builder.setMessage(msg);
+                    builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                            String[] sidoCity = ALARM_LOCATION.split(" ");
+                            int id = db.getDataCount();
+                            AlarmVO vo = new AlarmVO(id+1, "Y", sidoCity[0], sidoCity[1], ALARM_HOUR, ALARM_MIN, getStringDaysFormat());
+                            Log.d("insertDB", vo.toString());
+                            Log.d("insertDB", sidoCity[0]);
+                            Log.d("insertDB", sidoCity[1]);
+
+                            db.insertAlarmData(vo);
+                            addAlarm(getApplicationContext(), vo);
+                            Toast.makeText(AlarmActivity.this, "알람 등록이 완료되었습니다.", Toast.LENGTH_SHORT).show();
+                            //printDBData();
+                            ALARM_LOCATION = null;
+                            MyConst.intentVO.setInitData();
+                            MyConst.intentVO.setNeedListViewUpdate(true);
+                            finish();
+
+                        }
+                    });
+                    builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+                    builder.show();
+                }else{      //modify
+
+                    //수정은 업데이트
+                    String msg = "지역 : " + ALARM_LOCATION +
+                            "\n시간 : " + Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN) +
+                            "\n반복 요일 : " + getStringDaysFormat() +
+                            "\n위 기준으로 미세먼지/초미세먼지 알림을 수정하시겠습니까?";
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("미세먼지 알람 설정");
+                    builder.setCancelable(true);
+                    builder.setMessage(msg);
+                    builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                            String[] sidoCity = ALARM_LOCATION.split(" ");
+                            AlarmVO vo = new AlarmVO(ALARM_ID, "Y", sidoCity[0], sidoCity[1], ALARM_HOUR, ALARM_MIN, getStringDaysFormat());
+                            Log.d("insertDB", vo.toString());
+                            Log.d("insertDB", sidoCity[0]);
+                            Log.d("insertDB", sidoCity[1]);
+
+                            db.updateData(vo);
+                            updateAlarm(getApplicationContext(), vo);
+
+                            Toast.makeText(AlarmActivity.this, "알람 수정이 완료되었습니다.", Toast.LENGTH_SHORT).show();
+
+                            ALARM_LOCATION = null;
+                            MyConst.intentVO.setInitData();
+                            MyConst.intentVO.setNeedListViewUpdate(true);
+                            finish();
+
+
+                        }
+                    });
+                    builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    });
+                    builder.show();
+
+
+                }
+
+            }else{
+                Toast.makeText(this, "데이터를 선택하세요", Toast.LENGTH_SHORT).show();
+            }
+
+
+
+
+        }else if(  id == R.id.ibtn_alarm_back ){            //back
+
+            this.finish();
+
+
+        }else if(  id == R.id.ibtn_alarm_delete ){          //delete
+
+            String msg = "해당 알람을 삭제하시겠습니까?";
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("미세먼지 알람 설정");
+            builder.setCancelable(true);
+            builder.setMessage(msg);
+            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    db.deleteData(ALARM_ID);
+                    deleteAlarm(getApplicationContext(), ALARM_ID);
+                    Toast.makeText(AlarmActivity.this, "삭제가 완료되었습니다.", Toast.LENGTH_SHORT).show();
+                    MyConst.intentVO.setInitData();
+                    MyConst.intentVO.setNeedListViewUpdate(true);
+                    finish();
+                }
+            });
+            builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+            builder.show();
+        }
+
+        /* Toggle Button Event */
+        else if(id == R.id.tbtn_mon){
+            if( ALARM_DAYS[0] == false) ALARM_DAYS[0] = true;
+            else                         ALARM_DAYS[0] = false;
+            isVaildAlarmData();
+        }else if(id == R.id.tbtn_tue){
+            if( ALARM_DAYS[1] == false) ALARM_DAYS[1] = true;
+            else                         ALARM_DAYS[1] = false;
+            isVaildAlarmData();
+        }else if(id == R.id.tbtn_wen){
+            if( ALARM_DAYS[2] == false) ALARM_DAYS[2] = true;
+            else                         ALARM_DAYS[2] = false;
+            isVaildAlarmData();
+        }else if(id == R.id.tbtn_thu){
+            if( ALARM_DAYS[3] == false) ALARM_DAYS[3] = true;
+            else                         ALARM_DAYS[3] = false;
+            isVaildAlarmData();
+        }else if(id == R.id.tbtn_fri){
+            if( ALARM_DAYS[4] == false) ALARM_DAYS[4] = true;
+            else                         ALARM_DAYS[4] = false;
+            isVaildAlarmData();
+        }else if(id == R.id.tbtn_sat){
+            if( ALARM_DAYS[5] == false) ALARM_DAYS[5] = true;
+            else                         ALARM_DAYS[5] = false;
+            isVaildAlarmData();
+        }else if(id == R.id.tbtn_sun){
+            if( ALARM_DAYS[6] == false) ALARM_DAYS[6] = true;
+            else                         ALARM_DAYS[6] = false;
+            isVaildAlarmData();
+        }
+
+    }
+
+
     private TimePickerDialog.OnTimeSetListener timeSetListener = new TimePickerDialog.OnTimeSetListener() {
         @Override
         public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
@@ -479,29 +456,6 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
             }
         }
 
-
-        //UI Update
-//        if (ALARM_DAYS[0] == true) tbtn_0.setChecked(true);
-//        else                       tbtn_0.setChecked(false);
-//
-//        if (ALARM_DAYS[1] == true) tbtn_1.setChecked(true);
-//        else                       tbtn_1.setChecked(false);
-//
-//        if (ALARM_DAYS[2] == true) tbtn_2.setChecked(true);
-//        else                       tbtn_2.setChecked(false);
-//
-//        if (ALARM_DAYS[3] == true) tbtn_3.setChecked(true);
-//        else                       tbtn_3.setChecked(false);
-//
-//        if (ALARM_DAYS[4] == true) tbtn_4.setChecked(true);
-//        else                       tbtn_4.setChecked(false);
-//
-//        if (ALARM_DAYS[5] == true) tbtn_5.setChecked(true);
-//        else                       tbtn_5.setChecked(false);
-//
-//        if (ALARM_DAYS[6] == true) tbtn_6.setChecked(true);
-//        else                       tbtn_6.setChecked(false);
-
     }
 
     public boolean isVaildDaysData(){
@@ -512,147 +466,136 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
     }
 
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.d("onActivityResult", "Alarm " + requestCode + " " + requestCode);
 
-        /*// this -> main 으로 위치 선택하고 넘어온 값을 받아와서 텍스트에 뿌림.
-        if(requestCode == MapConst.ALARM_TO_MAIN_REQ_CODE_INTENT){
-            if( data != null ){
-                Intent i = getIntent();
-                ALARM_LOCATION = i.getStringExtra(MapConst.ALARM_LOCATION_TAG);
-                if(ALARM_LOCATION == null || "".equals(ALARM_LOCATION)){            //첫실행일경우
-                    isVaildLocation = false;
-                }else{
-                    tv_alarm_loc.setText(ALARM_LOCATION);
-                    isVaildLocation = true;
-                }
-            }
-        }*/
-
-    }
-
-    public void checkIntentData(){
-        IS_UPDATE = !MapConst.intentVO.isAlarmAdd();
-        ALARM_ID = MapConst.intentVO.getAlarmVoId();
-        ALARM_LOCATION = MapConst.intentVO.getLocName();
-
-
-
-        if(  MapConst.intentVO.isAlarmMarking() == true){
-            MapConst.intentVO.setAlarmMarker(false);
-            ALARM_DAYS = MapConst.intentVO.getCheckedDays();
-        }
-
-
-    }
-
-
-
-
-    /*
-
-    public void setAlarm(){
-
-        //유효성체크
-        boolean isValid = checkAlarmData();
-        if(isValid) {
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("미세먼지 알림");
-            builder.setCancelable(true);
-            builder.setMessage("알림을 등록하시겠습니까?");
-            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-
-
-                    Intent i = new Intent(getApplicationContext(), MyAlarmReceiver.class);
-                    i.putExtra("location", ALARM_LOCATION);
-                    i.putExtra("week", checkedDays);
-
-
-                    PendingIntent pi = PendingIntent.getBroadcast(getApplicationContext(), 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
-                    AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-
-
-                    */
-/*Calendar calendar = Calendar.getInstance();
-                    calendar.set(Calendar.HOUR_OF_DAY, ALARM_HOUR);
-                    calendar.set(Calendar.MINUTE, ALARM_MIN);
-                    calendar.set(Calendar.SECOND, 0);
-                    calendar.set(Calendar.MILLISECOND, 0);*//*
-
-                    //alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
-
-                    if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ){
-                        Log.d("ExactAndAllowWhileIdle", "등록");
-                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
-                    }
-                    else if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT ){
-                        alarmManager.setExact(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
-                    }
-                    else{
-                        alarmManager.set(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
-                    }
-
-                    Log.d("setAlarm" ,ALARM_LOCATION + "," + ALARM_HOUR + "," + ALARM_MIN + "," + ALARM_DAY + " 알림 설정 ");
-
-                    ALARM_TIME = Integer.toString(ALARM_HOUR) + ":" + Integer.toString(ALARM_MIN);
-                    pref.setPrefAlarm(ALARM_LOCATION, ALARM_TIME, ALARM_DAY);
-                    pref.setIsAlarmUse(true);
-                    Toast.makeText(getApplicationContext(), "알림 설정이 완료되었습니다. ", Toast.LENGTH_LONG).show();
-                    finish();
-                }
-            });
-            builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            });
-            builder.show();
-
-        }else{
-            Toast.makeText(this, "데이터를 선택하세요.", Toast.LENGTH_LONG).show();
-        }
-
-    }
-*/
 
 
 /*
-    public boolean checkAlarmData(){
 
-        boolean isValid = true;
+    public void addAlarm(AlarmVO vo){
+        convertStringToBooleanDays(vo.getDays());
 
-        if(ALARM_LOCATION == null || "".equals(ALARM_LOCATION) || "-".equals(ALARM_LOCATION)){
-            tv_alarm_loc_value.setText("");
-            isValid = false;
-        }else{
-            tv_alarm_loc_value.setText(ALARM_LOCATION);
+        Intent alarmIntent = new Intent(this, MyAlarmReceiver.class);
+        alarmIntent.putExtra(MyConst.ID_ALARM_INTENT_TAG, vo.getId());
+        alarmIntent.putExtra(MyConst.SIDO_ALARM_INTENT_TAG, vo.getSidoName());
+        alarmIntent.putExtra(MyConst.CITY_ALARM_INTENT_TAG, vo.getCityName());
+        alarmIntent.putExtra(MyConst.DAYS_ALARM_INTENT_TAG, ALARM_DAYS);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, vo.getHour());
+        calendar.set(Calendar.MINUTE, vo.getMin());
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        PendingIntent pi = PendingIntent.getBroadcast(getApplicationContext(), vo.getId(), alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(vo.getHour(), vo.getMin()), pi);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(vo.getHour(), vo.getMin()), pi);
+        } else {
+            alarmManager.set(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(vo.getHour(), vo.getMin()), pi);
         }
 
-        if(ALARM_TIME == null || "".equals(ALARM_TIME) || "-".equals(ALARM_TIME)){
-            tv_alarm_time_value.setText("");
-            isValid = false;
-        }else{
-            tv_alarm_time_value.setText(ALARM_TIME);
-        }
-
-
-        if(ALARM_DAY == null || "".equals(ALARM_DAY) || "-".equals(ALARM_DAY)){
-            tv_alarm_day_value.setText("");
-            isValid = false;
-        }else{
-            tv_alarm_day_value.setText(ALARM_DAY);
-        }
-
-        Log.d("checkAlarmData", "isValid" + isValid);
-        return isValid;
+        Log.d("addAlarm", vo.toString());
 
     }
+
+
+    public void deleteAlarm(int id){
+
+        AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(getApplicationContext(), MyAlarmReceiver.class);
+        PendingIntent sender = PendingIntent.getBroadcast(getApplicationContext(), id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        if (sender != null) {
+            am.cancel(sender);
+            sender.cancel();
+        }
+
+        Log.d("addAlarm", "id 알림매니저에서 삭제");
+
+    }
+
+    public void updateAlarm(AlarmVO vo){
+        deleteAlarm(vo.getId());
+        addAlarm(vo);
+    }
 */
+
+   /* public void setAlarm() {
+
+        //유효성체크
+        boolean isValid = checkAlarmData();
+        if (isValid) {
+
+
+            Intent i = new Intent(getApplicationContext(), MyAlarmReceiver.class);
+            i.putExtra("location", ALARM_LOCATION);
+            i.putExtra("week", checkedDays);
+
+
+            PendingIntent pi = PendingIntent.getBroadcast(getApplicationContext(), 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
+            AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR_OF_DAY, ALARM_HOUR);
+            calendar.set(Calendar.MINUTE, ALARM_MIN);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);*//**//*
+
+            //alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Log.d("ExactAndAllowWhileIdle", "등록");
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
+            } else {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
+            }
+
+            Log.d("setAlarm", ALARM_LOCATION + "," + ALARM_HOUR + "," + ALARM_MIN + "," + ALARM_DAY + " 알림 설정 ");
+
+           *//* ALARM_TIME = Integer.toString(ALARM_HOUR) + ":" + Integer.toString(ALARM_MIN);
+            pref.setPrefAlarm(ALARM_LOCATION, ALARM_TIME, ALARM_DAY);
+            pref.setIsAlarmUse(true);
+            Toast.makeText(getApplicationContext(), "알림 설정이 완료되었습니다. ", Toast.LENGTH_LONG).show();*//*
+        }
+
+    }*/
+
+
+/*
+
+    public void cancelAlarm() {
+
+        AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(getApplicationContext(), MyAlarmReceiver.class);
+        PendingIntent sender = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        if (sender != null) {
+            am.cancel(sender);
+            sender.cancel();
+        }
+
+        */
+/*ALARM_LOCATION = "";
+        ALARM_DAY = "";
+        ALARM_TIME = "";
+        pref.setIsAlarmUse(false);
+        pref.setPrefAlarm("", "", "");
+        Toast.makeText(getApplicationContext(), "알림 삭제가 완료되었습니다. ", Toast.LENGTH_LONG).show();
+        finish();*//*
+
+    }
+
+*/
+}
+
+
+
+
+
 
 
 
@@ -723,54 +666,4 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
     */
 
 
-
-
-
-/*
-
-    public void cancelAlarm() {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("미세먼지 알림");
-        builder.setCancelable(true);
-        builder.setMessage("알림을 삭제하시겠습니까?");
-        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-                AlarmManager am = (AlarmManager)getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-                Intent intent = new Intent(getApplicationContext(), MyAlarmReceiver.class);
-                PendingIntent sender = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                if (sender != null) {
-                    am.cancel(sender);
-                    sender.cancel();
-                }
-
-                ALARM_LOCATION = "";
-                ALARM_DAY = "";
-                ALARM_TIME = "";
-                pref.setIsAlarmUse(false);
-                pref.setPrefAlarm("", "", "");
-                Toast.makeText(getApplicationContext(), "알림 삭제가 완료되었습니다. ", Toast.LENGTH_LONG).show();
-                finish();
-            }
-        });
-        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-            }
-        });
-        builder.show();
-
-    }
-*/
-
-
-
-    public void printLog(String msg){
-        Log.d("AlarmAcitivity", msg);
-    }
-
-
-}
 

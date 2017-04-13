@@ -6,10 +6,9 @@ import android.content.Intent;
 import android.os.StrictMode;
 import android.util.Log;
 
-import com.lthwea.finedust.cnst.MapConst;
+import com.lthwea.finedust.cnst.MyConst;
 import com.lthwea.finedust.controller.DataController;
 import com.lthwea.finedust.util.Utils;
-import com.lthwea.finedust.vo.MarkerVO;
 
 import java.util.Calendar;
 
@@ -23,38 +22,32 @@ public class MyAlarmReceiver extends BroadcastReceiver {
 
         Log.d("MyAlarmReceiver", "onReceive");
 
-
-        String location = intent.getStringExtra("location");
-        boolean week[] = intent.getBooleanArrayExtra("week");
+        String sidoName = intent.getStringExtra(MyConst.SIDO_ALARM_INTENT_TAG);
+        String cityName = intent.getStringExtra(MyConst.CITY_ALARM_INTENT_TAG);
+        boolean[] days = intent.getBooleanArrayExtra(MyConst.DAYS_ALARM_INTENT_TAG);
 
         int todayIndex = getTodayIndex();
-        if (week[todayIndex] == true){
-            MarkerVO vo = MapConst.markerMap.get(location);
-            //String pm10Value = vo.getPm10Value() == null ? "데이터없음" : vo.getPm10Value();
-
-            String[] tmp = location.split(" ");
+        if (days[todayIndex] == true){
 
             DataController dc = new DataController();
-            String info = dc.getAlarmData(tmp[0], tmp[1]);      // p1 시, p2 시도
-            String[] infos;         //1 pm10, 2 pm25, 3 date time
+            String value = dc.getAlarmData(sidoName, cityName);      // p1 시, p2 시도
+
 
             String msg = "";
-            if(!"".equals(info)){
-                infos = info.split(",");
-                msg = location + " 상세정보\n";
-                msg += "미세먼지 : " + infos[0] +  "("+ Utils.getPm10ValueStatus(infos[0]) + ")\n";
-                msg +=  "초미세먼지 : " +infos[1]+  "("+ Utils.getPm25ValueStatus(infos[1]) + ")\n";
-                msg += "기준 : " + infos[2];
+            if(!"".equals(value)){
+                String[] values = value.split(",");         //1 pm10, 2 pm25, 3 date time
+                msg = sidoName + " " + cityName + " 상세정보\n";
+                msg += "미세먼지 : " + values[0] +  "("+ Utils.getPm10ValueStatus(values[0]) + ")\n";
+                msg +=  "초미세먼지 : " +values[1]+  "("+ Utils.getPm25ValueStatus(values[1]) + ")\n";
+                msg += "기준 : " + values[2];
             }else{
                 msg = "죄송합니다. 서버 연결이 원할하지 않아 데이터를 불러 올 수 없습니다.";
             }
-
-
+            
             Intent clockIntent = new Intent(context, MyAlarmActivity.class);
             clockIntent.putExtra("msg", msg);
             clockIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(clockIntent);
-
 
         }else{
 

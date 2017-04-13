@@ -50,7 +50,7 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
 import com.lthwea.finedust.R;
-import com.lthwea.finedust.cnst.MapConst;
+import com.lthwea.finedust.cnst.MyConst;
 import com.lthwea.finedust.controller.DataController;
 import com.lthwea.finedust.controller.PrefController;
 import com.lthwea.finedust.util.Utils;
@@ -187,9 +187,9 @@ public class MainActivity extends AppCompatActivity
 
 
 
-       /* for(int i = 0; i < MapConst.testList.size() ; i++){
+       /* for(int i = 0; i < MyConst.testList.size() ; i++){
 
-            String tmp = (String) MapConst.testList.get(i);
+            String tmp = (String) MyConst.testList.get(i);
             Address adr = getAddress(tmp);
             String[] tmp2 = tmp.split(" ");
             Log.d("getLatLng",  "put(\""+ tmp2[0] + tmp2[1] + "\"," + "new MarkerVO(\"" + tmp2[0] + "\",\"" + tmp2[1] + "\",new LatLng(  " + adr.getLatitude() + "," + adr.getLongitude() + ")) );" );
@@ -303,24 +303,24 @@ public class MainActivity extends AppCompatActivity
         DataController dc = new DataController();
         dc.getData();
 
-        Iterator<String> keys = MapConst.markerMap.keySet().iterator();
-        Log.e("MapConst.markerMap", "total count : " + MapConst.markerMap.size());
+        Iterator<String> keys = com.lthwea.finedust.cnst.MyConst.markerMap.keySet().iterator();
+        Log.e("MyConst.markerMap", "total count : " + com.lthwea.finedust.cnst.MyConst.markerMap.size());
         int errCnt = 0, norCnt = 0;
         while (keys.hasNext()) {
             String key = keys.next();
-            MarkerVO vo = MapConst.markerMap.get(key);
+            MarkerVO vo = com.lthwea.finedust.cnst.MyConst.markerMap.get(key);
             if (vo.getPm10Value() == null || vo.getPm10Value().equals("")) {
                 errCnt++;
-                Log.e("MapConst.markerMap", key + " : " + vo.getPm10Value());
+                Log.e("MyConst.markerMap", key + " : " + vo.getPm10Value());
             } else {
                 mClusterManager.addItem(vo);
                 norCnt++;
             }
         }
-        Log.e("MapConst.markerMap", "null or empty count : " + errCnt);
-        Log.e("MapConst.markerMap", "mClusterManager size : " + norCnt);
-        MapConst.CURRENT_DATA_DATE = (String) (MapConst.markerMap.get("서울강남구").getDataTime());
-        MapConst.CURRENT_MARKER_NUMBER = norCnt;
+        Log.e("MyConst.markerMap", "null or empty count : " + errCnt);
+        Log.e("MyConst.markerMap", "mClusterManager size : " + norCnt);
+        com.lthwea.finedust.cnst.MyConst.CURRENT_DATA_DATE = (String) (com.lthwea.finedust.cnst.MyConst.markerMap.get("서울강남구").getDataTime());
+        com.lthwea.finedust.cnst.MyConst.CURRENT_MARKER_NUMBER = norCnt;
 
     }
 
@@ -433,6 +433,8 @@ public class MainActivity extends AppCompatActivity
                 stopAlarmMarekrInMap();
             }
 
+
+            com.lthwea.finedust.cnst.MyConst.intentVO.setInitData();
             Intent i = new Intent(this, AlarmListActivity.class);
             startActivity(i);
 
@@ -478,20 +480,22 @@ public class MainActivity extends AppCompatActivity
             }
 
 
-            String msg = "전국 " + MapConst.CURRENT_MARKER_NUMBER + "개 시군구\n미세먼지, 초미세먼지 정보\n";
-            msg += "기준 : " + MapConst.CURRENT_DATA_DATE + "\n";
+            String msg = "전국 " + com.lthwea.finedust.cnst.MyConst.CURRENT_MARKER_NUMBER + "개 시군구\n미세먼지, 초미세먼지 정보\n";
+            msg += "기준 : " + com.lthwea.finedust.cnst.MyConst.CURRENT_DATA_DATE + "\n";
             msg += "제공 : 공공데이터포털";
 
-            AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
-            alertDialog.setTitle("데이터 정보");
-            alertDialog.setMessage(msg);
-            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-            alertDialog.show();
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("데이터 정보");
+            builder.setCancelable(true);
+            builder.setMessage(msg);
+            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            builder.show();
+
 
         } else if (id == R.id.mn_dust || id == R.id.mn_su_dust) {
             if (isSettingAlarmMarker) {
@@ -571,12 +575,12 @@ public class MainActivity extends AppCompatActivity
 
         //0 3
         //1 4
-        if ((requestCode == MapConst.I_MAIN_TO_LIST_REQ_CODE && resultCode == MapConst.I_LIST_TO_MAIN_RES_CODE) ||
-                (requestCode == MapConst.I_MAIN_TO_ALARM_REQ_CODE && resultCode == MapConst.I_ALARM_TO_MAIN_RES_CODE) ||
-                (requestCode == MapConst.I_MAIN_TO_ALARM_REQ_CODE && resultCode == MapConst.I_MAIN_TO_LIST_REQ_CODE)) {
+        if ((requestCode == MyConst.I_MAIN_TO_LIST_REQ_CODE && resultCode == MyConst.I_LIST_TO_MAIN_RES_CODE) ||
+                (requestCode == MyConst.I_MAIN_TO_ALARM_REQ_CODE && resultCode == MyConst.I_ALARM_TO_MAIN_RES_CODE) ||
+                (requestCode == MyConst.I_MAIN_TO_ALARM_REQ_CODE && resultCode == MyConst.I_MAIN_TO_LIST_REQ_CODE)) {
             {
                 if (data != null) {
-                    if ("Y".equals(data.getStringExtra(MapConst.ALARM_IS_SET_LOCATION_TAG))) {
+                    if ("Y".equals(data.getStringExtra(MyConst.ALARM_IS_SET_LOCATION_TAG))) {
                         setAlarmMarkerInMap();
                     }
                 }
@@ -591,7 +595,7 @@ public class MainActivity extends AppCompatActivity
 
     /*public void checkAlarmIntentData(){
         Intent intent = getIntent();
-        String isSetAlarmLocation = intent.getStringExtra(MapConst.ALARM_IS_SET_LOCATION_TAG);
+        String isSetAlarmLocation = intent.getStringExtra(MyConst.ALARM_IS_SET_LOCATION_TAG);
         if("Y".equals(isSetAlarmLocation)){
             setAlarmMarkerInMap();
         }
@@ -753,7 +757,7 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(getApplicationContext(), "시간과 요일을 선택해주세요.", Toast.LENGTH_SHORT).show();
                 stopAlarmMarekrInMap();
 
-                MapConst.intentVO.setLocName(location);
+                MyConst.intentVO.setLocName(location);
                 Intent i = new Intent(getApplicationContext(), AlarmListActivity.class);
                 startActivity(i);
             }
@@ -826,11 +830,11 @@ public class MainActivity extends AppCompatActivity
 
 
     public void checkIntentData(){
-        boolean b = MapConst.intentVO.isAlarmMarker();
+        boolean b = com.lthwea.finedust.cnst.MyConst.intentVO.isAlarmMarker();
         if(b == true){
             setAlarmMarkerInMap();
         }
-        MapConst.intentVO.setAlarmMarker(false);
+        com.lthwea.finedust.cnst.MyConst.intentVO.setAlarmMarker(false);
     }
 
 
@@ -870,7 +874,6 @@ public class MainActivity extends AppCompatActivity
 
     /**
      * Draws profile photos inside markers (using IconGenerator).
-     * When there are multiple people in the cluster, draw multiple photos (using MultiDrawable).
      */
     private class MarkerVORenderer extends DefaultClusterRenderer<MarkerVO> {
 
@@ -954,18 +957,7 @@ public class MainActivity extends AppCompatActivity
 
            BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(mClusterIconGenerator.makeIcon());
            markerOptions.icon(icon);*/
-         /*  List<Drawable> profilePhotos = new ArrayList<Drawable>(Math.min(4, cluster.getSize()));
-           int width = mDimension;
-           int height = mDimension;
 
-
-           MultiDrawable multiDrawable = new MultiDrawable(profilePhotos);
-           multiDrawable.setBounds(0, 0, width, height);
-
-           mClusterImageView.setImageDrawable(multiDrawable);
-           Bitmap icon = mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
-           markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
-            */
 
             int sum = 0;
             int cnt = 0;
