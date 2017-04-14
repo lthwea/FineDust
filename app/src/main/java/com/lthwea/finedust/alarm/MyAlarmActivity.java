@@ -16,7 +16,7 @@ public class MyAlarmActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.alarm_activity_clock_alarm);
+        setContentView(R.layout.alarm_dialog_activity);
 
         String message = this.getIntent().getStringExtra("msg");
         showAlarm( message );

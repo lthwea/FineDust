@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -130,16 +129,15 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
         boolean flag = false;
 
 
-        public AlarmVoAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<AlarmVO> objects) {
+        public AlarmVoAdapter(Context context, int resource, List<AlarmVO> objects) {
             super(context, resource, objects);
             this.layoutResource = resource;
 
 
         }
 
-        @NonNull
         @Override
-        public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        public View getView(final int position, View convertView, ViewGroup parent) {
             //return super.getView(position, convertView, parent);
             Log.d("getView", position + " ");
 
