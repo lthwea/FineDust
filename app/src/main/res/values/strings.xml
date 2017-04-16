@@ -28,5 +28,6 @@
     <string name="banner_ad_unit_id">ca-app-pub-3655876992422407/2505666979</string>
     <string name="full_ad_unit_id">ca-app-pub-3655876992422407/2366066174</string>
 
+    <string name="google_maps_api_key">AIzaSyAhQXi7jmd70m0Kw9UfvknM28SfvF-OfyU</string>
 
 </resources>

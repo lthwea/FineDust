@@ -10,6 +10,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.InterstitialAd;
 import com.lthwea.finedust.R;
 import com.lthwea.finedust.controller.WidgetController;
 import com.lthwea.finedust.view.MainActivity;
@@ -18,13 +19,13 @@ import com.lthwea.finedust.view.MainActivity;
 public class WidgetSettingActivity extends Activity implements View.OnClickListener{
 
     String LOCATION = null;
+    InterstitialAd interstitialAd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.widget_setting_activity);
 
-        //String message = this.getIntent().getStringExtra("msg");
         Button btn = (Button) findViewById(R.id.btn_widget_setting_complete);
         btn.setOnClickListener(this);
 
@@ -45,20 +46,13 @@ public class WidgetSettingActivity extends Activity implements View.OnClickListe
             btn.setBackgroundColor(ContextCompat.getColor(this, R.color.line_and_outline_grey));
         }
 
+
+
+
     }
 
 
     public void goWidget(){
-
-        /*Context context = this;
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-
-        RemoteViews updateViews = new RemoteViews(context.getPackageName(),R.layout.widget_main);
-        updateViews.setTextViewText(R.id.tv_main_widget_loc, LOCATION);
-
-        ComponentName thisWidget = new ComponentName(context, WidgetController.class);
-
-        appWidgetManager.updateAppWidget(thisWidget, updateViews);*/
 
         Intent intent = new Intent(this, WidgetController.class);
         intent.putExtra("LOCATION", LOCATION);
@@ -86,4 +80,6 @@ public class WidgetSettingActivity extends Activity implements View.OnClickListe
             finish();
         }
     }
+
+
 }

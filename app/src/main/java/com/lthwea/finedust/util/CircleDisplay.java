@@ -151,7 +151,7 @@ public class CircleDisplay extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        Log.d(LOG_TAG, "onDraw");
+        //Log.d(LOG_TAG, "onDraw");
         super.onDraw(canvas);
 
         if (!mBoxSetup) {
@@ -181,7 +181,7 @@ public class CircleDisplay extends View {
      * @param c
      */
     private void drawText(Canvas c) {
-        Log.d(LOG_TAG, "drawText" + VALUE);
+        //Log.d(LOG_TAG, "drawText" + VALUE);
 
 
         String title = TYPE == 1 ? "초미세먼지" : "미세먼지";
@@ -213,7 +213,7 @@ public class CircleDisplay extends View {
     private void drawCustomText(Canvas c) {
 
         int index = (int) ((mValue * mPhase) / mStepSize);
-        Log.d(LOG_TAG, "mValue " + mValue + " mPhase" + mPhase + " mStepSize" + mStepSize + " index " + index + " " + "\t" + mCustomText.length);
+        //Log.d(LOG_TAG, "mValue " + mValue + " mPhase" + mPhase + " mStepSize" + mStepSize + " index " + index + " " + "\t" + mCustomText.length);
 
         if(index < mCustomText.length) {
             c.drawText(mCustomText[index], getWidth() / 2, getHeight() / 2 + mTextPaint.descent(), mTextPaint);

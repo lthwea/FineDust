@@ -32,8 +32,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -113,6 +115,7 @@ public class MainActivity extends AppCompatActivity
     private NavigationView navigationView;
     public int actionBarHeight;
     public LinearLayout ll_status;
+    TextView mTitle;
 
 
     AdView mAdView;
@@ -125,6 +128,7 @@ public class MainActivity extends AppCompatActivity
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
 
+        setFullAd();
 
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -142,7 +146,8 @@ public class MainActivity extends AppCompatActivity
             startActivity(wIntent);
         }
 
-        TextView mTitle = (TextView) toolbar.findViewById(R.id.tv_toolbar_title);
+        mTitle = (TextView) toolbar.findViewById(R.id.tv_toolbar_title);
+        mTitle.setTextSize(20);
         mTitle.setText("전국 미세먼지 정보");
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -194,15 +199,10 @@ public class MainActivity extends AppCompatActivity
             AdRequest adRequest = new AdRequest.Builder().addTestDevice("FFA58C3D70AD52031C762233496B51FE").build();
             mAdView.loadAd(adRequest);*/
 
-
-
         MobileAds.initialize(getApplicationContext(), "ca-app-pub-3655876992422407/2505666979");
         mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
-
-
-
 
         // Google Map Setting
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(map);
@@ -350,14 +350,6 @@ public class MainActivity extends AppCompatActivity
             MyConst.CURRENT_MARKER_NUMBER = norCnt;
 
     }
-
-
-    // show near location info toast
-   /* public void showNearLocationInfoToast(double lat, double lng) {
-        String msg = Utils.getNearDistanceInfo(lat, lng);
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-    }*/
-
 
     /*
                 Start Toolbar Search Code
@@ -573,7 +565,7 @@ public class MainActivity extends AppCompatActivity
             if (id == R.id.mn_dust) {
                 if (isDustType == false) {
                     isDustType = true;
-                    //toolbar.setTitle("전국 미세먼지 정보");
+                    mTitle.setText("전국 미세먼지 정보");
                     showToast("전국 미세먼지 정보입니다.");
 
                     updateClusterManager();
@@ -588,7 +580,7 @@ public class MainActivity extends AppCompatActivity
             } else if (id == R.id.mn_su_dust) {
                 if (isDustType == true) {
                     isDustType = false;
-                    //toolbar.setTitle("전국 초미세먼지 정보");
+                    mTitle.setText("전국 초미세먼지 정보");
                     showToast("전국 초미세먼지 정보입니다.");
                     updateClusterManager();
                     changeTextViewStatus();
@@ -617,16 +609,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onInfoWindowClick(Marker marker) {
 
-        /*if (marker.equals(initMarker)) {
-
-            Toast.makeText(MainActivity.this, "initMarker 여기서 뭐하지...", Toast.LENGTH_SHORT).show();
-
-        } else if (marker.equals(alarmMarker)) {
-
-            Toast.makeText(MainActivity.this, "alarmMarker 여기서 뭐하지...", Toast.LENGTH_SHORT).show();
-
-        }*/
-
     }
 
 
@@ -637,7 +619,7 @@ public class MainActivity extends AppCompatActivity
         MarkerOptions marker = new MarkerOptions();
         marker.position(location)
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.ico_map_marker1))
-                .title("알림 받을 지역을 선택합니다.")
+                .title("알람 받을 지역을 선택합니다.")
                 .snippet("마커를 롱클릭 후 드래그하여 이동해주세요.")
                 .draggable(true);
 
@@ -695,15 +677,6 @@ public class MainActivity extends AppCompatActivity
             popInitMarkerDialog(location.latitude, location.longitude, (double) DEFAULT_MIN_ZOOM_LEVEL);
         }
 
-      /*  mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
-            @Override
-            public void onInfoWindowClick(Marker marker) {
-                if(marker.equals(initMarker)){
-
-                    Toast.makeText(MainActivity.this, "여기서 뭐하지...", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });*/
     }
 
     public void stopInitLocationInMap() {
@@ -761,6 +734,7 @@ public class MainActivity extends AppCompatActivity
                 pref.setIsFirstInitMarker(false);
                 stopInitLocationInMap();
                 Toast.makeText(getApplicationContext(), "앱 실행시 시작위치를 변경하였습니다.", Toast.LENGTH_SHORT).show();
+                displayAD();
             }
         });
         builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
@@ -788,9 +762,9 @@ public class MainActivity extends AppCompatActivity
         Log.d("popAlarmMarkerDialog", location + "\t\t ....");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-        builder.setTitle("알림 위치 설정");
+        builder.setTitle("알람 위치 설정");
         builder.setCancelable(true);
-        builder.setMessage("마커에서 가장 가까운 측정지\n" + location + " 입니다. 알림 설정하시겠습니까?");
+        builder.setMessage("마커에서 가장 가까운 측정지\n" + location + " 입니다. 알람 설정하시겠습니까?");
         builder.setPositiveButton("네", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -957,40 +931,14 @@ public class MainActivity extends AppCompatActivity
         private final IconGenerator mIconGenerator = new IconGenerator(getApplicationContext());
         private final IconGenerator mClusterIconGenerator = new IconGenerator(getApplicationContext());
 
-        /*private final ImageView mImageView;
-        private final ImageView mClusterImageView;*/
-
-        /* private final TextView mTextView;
-         private final TextView mClusterTextView;
- */
         public MarkerVORenderer() {
             super(getApplicationContext(), mMap, mClusterManager);
-
-         /*   View multiProfile = getLayoutInflater().inflate(R.layout.multi_profile, null);
-            mClusterIconGenerator.setContentView(multiProfile);
-            mClusterTextView = (TextView) multiProfile.findViewById(R.id.tv_map_clustered);
-            mTextView = new TextView(getApplicationContext());
-            mIconGenerator.setContentView(mTextView);*/
-
-         /*    mClusterImageView = (ImageView) multiProfile.findViewById(R.id.image);
-            mImageView = new ImageView(getApplicationContext());
-           mDimension = (int) getResources().getDimension(R.dimen.custom_profile_image);
-            mImageView.setLayoutParams(new ViewGroup.LayoutParams(mDimension, mDimension));
-            int padding = (int) getResources().getDimension(R.dimen.custom_profile_padding);
-            mImageView.setPadding(padding, padding, padding, padding);*/
-
         }
 
         @Override
         protected void onBeforeClusterItemRendered(MarkerVO vo, MarkerOptions markerOptions) {
             //Log.d("singleItem", vo.getSidoName() + " " + vo.getCityName());
-            // Draw a single person.
-            // Set the info window to show their name.
-            //mImageView.setImageResource(R.drawable.ic_menu_camera);
-            //Bitmap icon = mIconGenerator.makeIcon();
-            //markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(vo.getCityName());
 
-            // String str = vo.getSidoName() + " " + vo.getCityName() + " " + vo.getPm10Value();
             String str;
 
             if (isDustType) {
@@ -1013,28 +961,6 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onBeforeClusterRendered(Cluster<MarkerVO> cluster, MarkerOptions markerOptions) {
-
-
-            //Log.d("onBeforeClusterRendered", cluster.getSize() + "");
-
-            // Draw multiple people.
-            // Note: this method runs on the UI thread. Don't spend too much time in here (like in this example).
-
-            //Drawable marker;
-          /* int ClusterSize = cluster.getSize();
-
-           //marker = getApplication().getResources().getDrawable(R.drawable.ic_menu_camera);
-           mClusterIconGenerator.setColor(Color.GREEN);
-
-           LayoutInflater myInflater = (LayoutInflater)getApplication().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-           View activityView = myInflater.inflate(R.layout.multi_profile, null, false);
-
-           mClusterIconGenerator.setContentView(activityView);
-           mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
-
-           BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(mClusterIconGenerator.makeIcon());
-           markerOptions.icon(icon);*/
-
 
             int sum = 0;
             int cnt = 0;
@@ -1128,22 +1054,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-//    private final long BASE_DATA_UPDATE_TIME = 1000 * 60 * 60;    //1시간
-//    public void checkAppRunTimeMills(){
-//        long tempTime = System.currentTimeMillis();
-//        long intervalTime = tempTime - APP_RUN_TIME_MILLIS;
-//
-//        if (0 <= intervalTime && BASE_DATA_UPDATE_TIME >= intervalTime) {     //지남
-//
-//        } else {        //안지남
-//
-//        }
-//
-//    }
-//    @Override
-//    public void onCameraMoveStarted(int i) {
-//
-//    }
 
     @Override
     public void onClusterItemInfoWindowClick(MarkerVO item) {
@@ -1186,32 +1096,6 @@ public class MainActivity extends AppCompatActivity
     // gps 권한 동의
     // https://developers.google.com/android/guides/permissions
     public boolean checkLocationPermission() {
-       /* Log.d("checkLocationPermission", "checkLocationPermission");
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-                // Show an expanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-                //Prompt the user once explanation has been shown
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_LOCATION);
-
-            } else {
-                // No explanation needed, we can request the permission.
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_LOCATION);
-            }
-            return false;
-        }
-        else {
-            return true;
-        }*/
 
         Log.d("PermissionsResult", "checkLocationPermission");
 
@@ -1242,33 +1126,6 @@ public class MainActivity extends AppCompatActivity
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         Log.d("PermissionsResult", requestCode + " ");
 
-        /*switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_LOCATION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted
-                    Log.d("checkLocationPermission", "onRequestPermissionsResult");
-                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        // TODO: Consider calling
-                        //    ActivityCompat#requestPermissions
-                        // here to request the missing permissions, and then overriding
-                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                        //                                          int[] grantResults)
-                        // to handle the case where the user grants the permission. See the documentation
-                        // for ActivityCompat#requestPermissions for more details.
-                        return;
-                    }
-                    mMap.setMyLocationEnabled(true);
-
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                    Toast.makeText(this, "위치 권한 동의를 거부하였습니다.", Toast.LENGTH_LONG).show();
-                    Log.d("checkLocationPermission", "위치 권한 동의를 거부하였습니다.");
-                }
-                return;
-            }
-        }*/
 
         if (requestCode == REQUEST_LOCATION) {
             if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -1314,6 +1171,29 @@ public class MainActivity extends AppCompatActivity
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
+    InterstitialAd interstitialAd;
+    private void setFullAd(){
+        interstitialAd = new InterstitialAd(this); //새 광고를 만듭니다.
+        interstitialAd.setAdUnitId(getResources().getString(R.string.full_ad_unit_id)); //이전에 String에 저장해 두었던 광고 ID를 전면 광고에 설정합니다.
+        AdRequest adRequest1 = new AdRequest.Builder().build(); //새 광고요청
+        interstitialAd.loadAd(adRequest1); //요청한 광고를 load 합니다.
+        interstitialAd.setAdListener(new AdListener() { //전면 광고의 상태를 확인하는 리스너 등록
+
+            @Override
+            public void onAdClosed() { //전면 광고가 열린 뒤에 닫혔을 때
+                AdRequest adRequest1 = new AdRequest.Builder().build();  //새 광고요청
+                interstitialAd.loadAd(adRequest1); //요청한 광고를 load 합니다.
+            }
+        });
+    }
+
+
+    public void displayAD() {
+
+        if (interstitialAd.isLoaded()) { //광고가 로드 되었을 시
+            interstitialAd.show(); //보여준다
+        }
+    }
 
 }
 

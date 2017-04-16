@@ -272,7 +272,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                     String msg = "지역 : " + ALARM_LOCATION +
                                  "\n시간 : " + Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN) +
                                  "\n반복 요일 : " + getStringDaysFormat() +
-                                 "\n위 기준으로 미세먼지/초미세먼지 알림을 받으시겠습니까?";
+                                 "\n위 기준으로 미세먼지/초미세먼지 알람을 받으시겠습니까?";
 
                             AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle("미세먼지 알람 설정");
@@ -313,7 +313,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                     String msg = "지역 : " + ALARM_LOCATION +
                             "\n시간 : " + Utils.getTimeStringFormat(ALARM_HOUR, ALARM_MIN) +
                             "\n반복 요일 : " + getStringDaysFormat() +
-                            "\n위 기준으로 미세먼지/초미세먼지 알림을 수정하시겠습니까?";
+                            "\n위 기준으로 미세먼지/초미세먼지 알람을 수정하시겠습니까?";
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle("미세먼지 알람 설정");
@@ -515,68 +515,6 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 
 
 
-
-
-
-    /*
-    public void popDayDialog() {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        // Convert the color array to list
-        final List<String> daysList = Arrays.asList(days);
-
-        builder.setMultiChoiceItems(days, checkedDays, new DialogInterface.OnMultiChoiceClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                // Update the current focused item's checked status
-                checkedDays[which] = isChecked;
-                // Get the current focused item
-                //String currentItem = daysList.get(which);
-                // Notify the current action
-                //Toast.makeText(getApplicationContext(),currentItem + " " + isChecked, Toast.LENGTH_SHORT).show();
-
-            }
-        });
-
-        // Specify the dialog is not cancelable
-        builder.setCancelable(false);
-        // Set a title for alert dialog
-        builder.setTitle("반복할 요일을 선택해주세요.");
-        // Set the positive/yes button click listener
-        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                ALARM_DAY = "";
-
-                int tmp = 0;
-
-                for (int i = 0; i<checkedDays.length; i++) {
-                    boolean checked = checkedDays[i];
-                    if (checked) {
-                        ALARM_DAY += daysList.get(i).substring(0, 1) + " ";
-
-                    }
-                }
-
-                checkAlarmData();
-               // Toast.makeText(getApplicationContext(), tmp, Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        // Set the negative/no button click listener
-        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // Do something when click the negative button
-            }
-        });
-
-        AlertDialog dialog = builder.create();
-        // Display the alert dialog on interface
-        dialog.show();
-    }
-    */
 
 
 

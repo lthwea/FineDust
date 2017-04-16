@@ -231,7 +231,6 @@ public class AlarmDataController extends SQLiteOpenHelper{
         Cursor cursor = db.rawQuery(countQuery, null);
         int cnt = cursor.getCount();
         cursor.close();
-        // return count
         return cnt;
     }
 

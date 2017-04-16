@@ -17,13 +17,9 @@ public class MyConst {
     public static String CURRENT_DATA_DATE = "";
     public static int CURRENT_MARKER_NUMBER = 0;
 
-
-
     public static final String ID_ALARM_INTENT_TAG = "ID_ALARM_INTENT_TAG";
     public static final String SIDO_ALARM_INTENT_TAG = "SIDO_ALARM_INTENT_TAG";
     public static final String CITY_ALARM_INTENT_TAG = "CITY_ALARM_INTENT_TAG";
-    public static final String HOUR_ALARM_INTENT_TAG = "HOUR_ALARM_INTENT_TAG";
-    public static final String MIN_ALARM_INTENT_TAG = "MIN_ALARM_INTENT_TAG";
     public static final String DAYS_ALARM_INTENT_TAG = "DAYS_ALARM_INTENT_TAG";
 
     public static final String DATE_TIME_DETAIL_INTENT_TAG = "DATE_TIME_DETAIL_INTENT_TAG";
@@ -38,8 +34,6 @@ public class MyConst {
 
 
     public static final String WIDGET_TO_MAIN_INTENT_ACTION = "WIDGET_TO_MAIN_INTENT_ACTION";
-    public static final String SIDO_MAIN_TO_WIDGET_INTENT_TAG = "SIDO_MAIN_TO_WIDGET_INTENT_TAG";
-    public static final String CITY_MAIN_TO_WIDGET_INTENT_TAG = "CITY_MAIN_TO_WIDGET_INTENT_TAG";
 
 
 
@@ -48,8 +42,6 @@ public class MyConst {
             false,false,false,false,false,false,false
     };
     public static IntentVO intentVO = new IntentVO(false, null, false, INTENT_DEFAULT_ID, false, INTENT_DEFAULT_DAYS, false, null);
-
-
 
 
     public static Map<String, MarkerVO> markerMap = new HashMap<String, MarkerVO>(){

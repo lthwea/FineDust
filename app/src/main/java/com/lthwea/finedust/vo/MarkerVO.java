@@ -21,7 +21,6 @@ public class MarkerVO implements ClusterItem {
     private String no2Value;
     private String coValue;
     private String dataTime;
-//    private String cityNameEng;
 
 
 
