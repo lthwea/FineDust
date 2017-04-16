@@ -4,10 +4,15 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.lthwea.finedust.R;
 import com.lthwea.finedust.alarm.MyAlarmReceiver;
 import com.lthwea.finedust.cnst.MyConst;
 import com.lthwea.finedust.controller.AlarmDataController;
@@ -190,7 +195,7 @@ public class Utils {
         try {
             int val = Integer.parseInt(v);
 
-            if(val<=30){
+            if(val<=30 && val >= 0){
                 return "좋음";
             }else if(val <= 80 && val >= 31){
                 return "보통";
@@ -199,7 +204,7 @@ public class Utils {
             }else if(val >= 151){
                 return "매우나쁨";
             }else{
-                return "";
+                return "데이터없음";
             }
 
         }catch (Exception e){
@@ -213,7 +218,7 @@ public class Utils {
         try {
             int val = Integer.parseInt(v);
 
-            if(val<=15){
+            if(val<=15 && val >= 0){
                 return "좋음";
             }else if(val <= 50 && val >= 16){
                 return "보통";
@@ -222,7 +227,7 @@ public class Utils {
             }else if(val >= 101){
                 return "매우나쁨";
             }else{
-                return "";
+                return "데이터없음";
             }
 
         }catch (Exception e){
@@ -298,7 +303,7 @@ public class Utils {
 
 
 
-
+    // sqlite
     public static void addAlarm(Context context, AlarmVO vo){
 
 
@@ -352,5 +357,74 @@ public class Utils {
     }
 
 
+
+
+
+    // 인터넷 연결 확인
+    public static boolean isConnectNetwork(Context context){
+
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        if (activeNetwork != null) {
+            if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
+                return true;
+            } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
+
+    // 데이터 수치에 의한 색깔
+    public static int getPm10MarkerColor(Context context, int val) {
+        if (val >= 0 && val <= 30) {
+            return ContextCompat.getColor(context, R.color.color_dust_1);
+        } else if (val >= 31 && val <= 80) {
+            return ContextCompat.getColor(context, R.color.color_dust_2);
+        } else if (val >= 81 && val <= 150) {
+            return ContextCompat.getColor(context, R.color.color_dust_3);
+        } else if (val >= 151) {
+            return ContextCompat.getColor(context, R.color.color_dust_4);
+        } else {
+            return Color.BLACK;
+        }
+    }
+
+
+
+    public static int getPm25MarkerColor(Context context, int val) {
+
+        if (val >= 0 && val <= 15) {
+            return ContextCompat.getColor(context, R.color.color_dust_1);
+        } else if (val >= 16 && val <= 50) {
+            return ContextCompat.getColor(context, R.color.color_dust_2);
+        } else if (val >= 51 && val <= 100) {
+            return ContextCompat.getColor(context, R.color.color_dust_3);
+        } else if (val >= 101) {
+            return ContextCompat.getColor(context, R.color.color_dust_4);
+        } else {
+            return Color.BLACK;
+        }
+
+    }
+
+
+
+    public static int convertTodayStatusStringToInt(String val){
+        if("좋음".equals(val)){
+            return 25;
+        }if("보통".equals(val)){
+            return 75;
+        }if("나쁨".equals(val)){
+            return 112;
+        }if("매우나쁨".equals(val)){
+            return 150;
+        }else{
+            return 0;
+        }
+    }
 
 }

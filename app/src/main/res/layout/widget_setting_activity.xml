@@ -1,0 +1,100 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/LinearLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".view.AlarmActivity"
+    android:background="@color/grey">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@color/white"
+        android:clickable="true"
+        android:layout_marginBottom="20dp">
+
+       <ImageButton
+            android:layout_marginLeft="15dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/rounded"
+            android:src="@mipmap/ic_keyboard_backspace_white_48dp"
+            android:layout_centerVertical="true"
+            android:id="@+id/ibtn_widget_back" />
+
+        <TextView
+
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="위젯 설정"
+            android:gravity="center_vertical"
+            android:textAlignment="center"
+            android:textColor="@color/black"
+            android:textSize="25dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
+    </RelativeLayout>
+
+    <TextView
+        android:layout_marginTop="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="15dp"
+        android:text="지역 설정"
+        android:textColor="@color/black"
+        android:layout_marginBottom="2dp"/>
+
+    <RelativeLayout
+        android:id="@+id/rl_widget_loc"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/white"
+        android:clickable="true">
+
+        <TextView
+            android:id="@+id/tv_setting_widget_loc"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="위젯 지역을 선택하세요."
+            android:gravity="center_vertical"
+            android:textAlignment="center"
+            android:textColor="@color/black"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/personal_item_arrow"
+            android:gravity="center_vertical"
+            android:layout_alignParentRight="true"
+            />
+    </RelativeLayout>
+
+
+
+
+
+
+
+
+    <Button
+        android:id="@+id/btn_widget_setting_complete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="완료"
+        android:textSize="25dp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:background="@color/line_and_outline_grey"/>
+
+</LinearLayout>
+
+

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".activity.AlarmActivity"
+    tools:context=".view.AlarmActivity"
     android:background="@color/grey">
 
     <RelativeLayout
@@ -12,7 +12,7 @@
         android:layout_height="100dp"
         android:background="@color/white"
         android:clickable="true"
-        android:layout_marginBottom="20dp">
+        android:layout_marginBottom="10dp">
 
        <ImageButton
             android:layout_marginLeft="15dp"
@@ -53,13 +53,14 @@
     </RelativeLayout>
 
     <TextView
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="15dp"
         android:text="지역 설정"
         android:textColor="@color/black"
-        android:layout_marginBottom="2dp"/>
+        android:layout_marginBottom="2dp"
+        android:layout_marginLeft="5dp"/>
 
     <RelativeLayout
         android:id="@+id/rl_loc"
@@ -90,21 +91,17 @@
     </RelativeLayout>
 
 
-
-
-
-
-
-
-
     <TextView
-        android:layout_marginTop="30dp"
+        android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="15dp"
+        android:layout_marginBottom="2dp"
+        android:layout_marginTop="30dp"
         android:text="시간 설정"
         android:textColor="@color/black"
-        android:layout_marginBottom="2dp"/>
+        android:textSize="15dp"
+        android:layout_marginLeft="5dp"
+        />
 
     <RelativeLayout
         android:id="@+id/rl_time"
@@ -132,17 +129,16 @@
     </RelativeLayout>
 
 
-
-
-
     <TextView
+        android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="반복 요일 설정"
-        android:textSize="15dp"
+        android:layout_marginBottom="2dp"
         android:layout_marginTop="30dp"
+        android:text="반복 요일 설정"
         android:textColor="@color/black"
-        android:layout_marginBottom="2dp"/>/>
+        android:textSize="15dp"
+        android:layout_marginLeft="5dp"/>
 
 
     <LinearLayout

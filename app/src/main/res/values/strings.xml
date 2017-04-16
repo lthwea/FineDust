@@ -24,8 +24,9 @@
     <string name="pref_alarm_day">alarm_day</string>
 
 
-
+    <!-- 애드몹 -->
     <string name="banner_ad_unit_id">ca-app-pub-3655876992422407/2505666979</string>
+    <string name="full_ad_unit_id">ca-app-pub-3655876992422407/2366066174</string>
 
 
 </resources>

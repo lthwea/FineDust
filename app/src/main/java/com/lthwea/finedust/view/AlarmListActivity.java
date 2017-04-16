@@ -1,10 +1,8 @@
-package com.lthwea.finedust.activity;
+package com.lthwea.finedust.view;
 
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +15,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
+;
 
 import com.lthwea.finedust.R;
 import com.lthwea.finedust.cnst.MyConst;
@@ -52,7 +51,7 @@ public class AlarmListActivity extends AppCompatActivity implements View.OnClick
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.alarm_list_activity);
-        getSupportActionBar().hide();
+        //getSupportActionBar().hide();
 
         // back button
       /*  android.support.v7.app.ActionBar actionBar = getSupportActionBar();

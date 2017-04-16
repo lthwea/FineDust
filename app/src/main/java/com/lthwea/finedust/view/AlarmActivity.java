@@ -1,4 +1,4 @@
-package com.lthwea.finedust.activity;
+package com.lthwea.finedust.view;
 
 import android.app.TimePickerDialog;
 import android.content.DialogInterface;
@@ -15,6 +15,9 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 import com.lthwea.finedust.R;
 import com.lthwea.finedust.cnst.MyConst;
 import com.lthwea.finedust.controller.AlarmDataController;
@@ -61,12 +64,15 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
     /* SQLite */
     private AlarmDataController db;
 
+
+    InterstitialAd interstitialAd;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_alarm);
-        getSupportActionBar().hide();
+        setContentView(R.layout.alarm_setting_activity);
+        //getSupportActionBar().hide();
 
         Log.d("AlarmActivity", "onCreate call");
 
@@ -115,6 +121,10 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
         changeUpdateUI();
 
         isVaildAlarmData();
+
+
+        //admob
+        setFullAd();
 
 
     }
@@ -286,6 +296,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                             ALARM_LOCATION = null;
                             MyConst.intentVO.setInitData();
                             MyConst.intentVO.setNeedListViewUpdate(true);
+                            displayAD();
                             finish();
 
                         }
@@ -326,6 +337,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                             ALARM_LOCATION = null;
                             MyConst.intentVO.setInitData();
                             MyConst.intentVO.setNeedListViewUpdate(true);
+                            displayAD();
                             finish();
 
 
@@ -467,129 +479,30 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 
 
 
+    private void setFullAd(){
+        interstitialAd = new InterstitialAd(this); //새 광고를 만듭니다.
+        interstitialAd.setAdUnitId(getResources().getString(R.string.full_ad_unit_id)); //이전에 String에 저장해 두었던 광고 ID를 전면 광고에 설정합니다.
+        AdRequest adRequest1 = new AdRequest.Builder().build(); //새 광고요청
+        interstitialAd.loadAd(adRequest1); //요청한 광고를 load 합니다.
+        interstitialAd.setAdListener(new AdListener() { //전면 광고의 상태를 확인하는 리스너 등록
 
-
-/*
-
-    public void addAlarm(AlarmVO vo){
-        convertStringToBooleanDays(vo.getDays());
-
-        Intent alarmIntent = new Intent(this, MyAlarmReceiver.class);
-        alarmIntent.putExtra(MyConst.ID_ALARM_INTENT_TAG, vo.getId());
-        alarmIntent.putExtra(MyConst.SIDO_ALARM_INTENT_TAG, vo.getSidoName());
-        alarmIntent.putExtra(MyConst.CITY_ALARM_INTENT_TAG, vo.getCityName());
-        alarmIntent.putExtra(MyConst.DAYS_ALARM_INTENT_TAG, ALARM_DAYS);
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, vo.getHour());
-        calendar.set(Calendar.MINUTE, vo.getMin());
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-
-        PendingIntent pi = PendingIntent.getBroadcast(getApplicationContext(), vo.getId(), alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(vo.getHour(), vo.getMin()), pi);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(vo.getHour(), vo.getMin()), pi);
-        } else {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(vo.getHour(), vo.getMin()), pi);
-        }
-
-        Log.d("addAlarm", vo.toString());
-
-    }
-
-
-    public void deleteAlarm(int id){
-
-        AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(getApplicationContext(), MyAlarmReceiver.class);
-        PendingIntent sender = PendingIntent.getBroadcast(getApplicationContext(), id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        if (sender != null) {
-            am.cancel(sender);
-            sender.cancel();
-        }
-
-        Log.d("addAlarm", "id 알림매니저에서 삭제");
-
-    }
-
-    public void updateAlarm(AlarmVO vo){
-        deleteAlarm(vo.getId());
-        addAlarm(vo);
-    }
-*/
-
-   /* public void setAlarm() {
-
-        //유효성체크
-        boolean isValid = checkAlarmData();
-        if (isValid) {
-
-
-            Intent i = new Intent(getApplicationContext(), MyAlarmReceiver.class);
-            i.putExtra("location", ALARM_LOCATION);
-            i.putExtra("week", checkedDays);
-
-
-            PendingIntent pi = PendingIntent.getBroadcast(getApplicationContext(), 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
-            AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(Calendar.HOUR_OF_DAY, ALARM_HOUR);
-            calendar.set(Calendar.MINUTE, ALARM_MIN);
-            calendar.set(Calendar.SECOND, 0);
-            calendar.set(Calendar.MILLISECOND, 0);*//**//*
-
-            //alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Log.d("ExactAndAllowWhileIdle", "등록");
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
-            } else {
-                alarmManager.set(AlarmManager.RTC_WAKEUP, Utils.getTriggerAtMillis(ALARM_HOUR, ALARM_MIN), pi);
+            @Override
+            public void onAdClosed() { //전면 광고가 열린 뒤에 닫혔을 때
+                AdRequest adRequest1 = new AdRequest.Builder().build();  //새 광고요청
+                interstitialAd.loadAd(adRequest1); //요청한 광고를 load 합니다.
             }
-
-            Log.d("setAlarm", ALARM_LOCATION + "," + ALARM_HOUR + "," + ALARM_MIN + "," + ALARM_DAY + " 알림 설정 ");
-
-           *//* ALARM_TIME = Integer.toString(ALARM_HOUR) + ":" + Integer.toString(ALARM_MIN);
-            pref.setPrefAlarm(ALARM_LOCATION, ALARM_TIME, ALARM_DAY);
-            pref.setIsAlarmUse(true);
-            Toast.makeText(getApplicationContext(), "알림 설정이 완료되었습니다. ", Toast.LENGTH_LONG).show();*//*
-        }
-
-    }*/
-
-
-/*
-
-    public void cancelAlarm() {
-
-        AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(getApplicationContext(), MyAlarmReceiver.class);
-        PendingIntent sender = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        if (sender != null) {
-            am.cancel(sender);
-            sender.cancel();
-        }
-
-        */
-/*ALARM_LOCATION = "";
-        ALARM_DAY = "";
-        ALARM_TIME = "";
-        pref.setIsAlarmUse(false);
-        pref.setPrefAlarm("", "", "");
-        Toast.makeText(getApplicationContext(), "알림 삭제가 완료되었습니다. ", Toast.LENGTH_LONG).show();
-        finish();*//*
-
+        });
     }
 
-*/
+
+    public void displayAD() {
+        if (interstitialAd.isLoaded()) { //광고가 로드 되었을 시
+            interstitialAd.show(); //보여준다
+
+        }
+    }
+
+
 }
 
 

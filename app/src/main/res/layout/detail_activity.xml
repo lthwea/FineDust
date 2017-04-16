@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/LinearLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/grey"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@color/white"
+        android:clickable="true">
+
+        <ImageButton
+            android:id="@+id/ibtn_detail_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="15dp"
+            android:background="@drawable/rounded"
+            android:src="@mipmap/ic_keyboard_backspace_white_48dp" />
+
+        <TextView
+            android:id="@+id/tv_detail_title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:gravity="center_vertical"
+            android:text="미세먼지 정보"
+            android:textAlignment="center"
+            android:textColor="@color/black"
+            android:textSize="25dp" />
+
+    </RelativeLayout>
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:text="단위:㎍/㎥"
+        android:textAlignment="textEnd"
+        android:textColor="@color/black"
+        android:textSize="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="10dp"
+        android:text="실시간 정보"
+        android:textColor="@color/black"
+        android:textSize="15dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_detail_rt_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="5dp"
+            android:text="서울시 강남구 (2017-04-16 08:00)"
+            android:textColor="@color/black"
+            android:textAlignment="center"
+            android:textSize="17dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:gravity="center">
+
+            <com.lthwea.finedust.util.CircleDisplay
+                android:id="@+id/circle_dust"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginRight="40dp" />
+
+            <com.lthwea.finedust.util.CircleDisplay
+                android:id="@+id/circle_su_dust"
+                android:layout_width="100dp"
+                android:layout_height="100dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="20dp"
+        android:text="오늘의 예보"
+        android:textColor="@color/black"
+        android:textSize="15dp" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:orientation="horizontal">
+
+        <com.lthwea.finedust.util.CircleDisplay
+            android:id="@+id/circle_today"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"/>
+
+
+        <TextView
+            android:id="@+id/tv_detail_today_forecast"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="대기확산이 원활하여 대부분 일평균 ‘보통’ 수준을 나타내겠으나, 수도권은 대기정체로 밤에 농도가 다소 높을 것으로 예상"
+            android:textColor="@color/black"
+            android:textSize="15dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_toRightOf="@+id/circle_today"
+            android:layout_toEndOf="@+id/circle_today" />
+
+
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="20dp"
+        android:text="내일의 예보"
+        android:textColor="@color/black"
+        android:textSize="15dp" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:orientation="horizontal"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp">
+
+        <TextView
+            android:id="@+id/tv_detail_tomorrow_forecast"
+            android:layout_marginLeft="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="강수에 의한 세정으로 대체로 청정한 대기상태를 나타내겠으나, 수도권은 대기정체로 아침까지 농도가 다소 높을 것으로 예상"
+            android:textColor="@color/black"
+            android:textSize="15dp" />
+
+    </RelativeLayout>
+
+</LinearLayout>

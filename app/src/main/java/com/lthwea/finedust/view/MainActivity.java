@@ -1,12 +1,12 @@
-package com.lthwea.finedust.activity;
+package com.lthwea.finedust.view;
 
 import android.Manifest;
 import android.app.SearchManager;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
@@ -16,7 +16,6 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -33,6 +32,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -55,6 +57,7 @@ import com.lthwea.finedust.controller.DataController;
 import com.lthwea.finedust.controller.PrefController;
 import com.lthwea.finedust.util.Utils;
 import com.lthwea.finedust.vo.MarkerVO;
+import com.lthwea.finedust.widget.WidgetSettingActivity;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -63,6 +66,7 @@ import java.util.List;
 import static android.os.Build.VERSION_CODES.M;
 import static com.lthwea.finedust.R.id.map;
 import static com.lthwea.finedust.util.Utils.getNearDistanceLocation;
+import static com.lthwea.finedust.util.Utils.getPm10MarkerColor;
 
 
 public class MainActivity extends AppCompatActivity
@@ -81,6 +85,9 @@ public class MainActivity extends AppCompatActivity
         ClusterManager.OnClusterItemInfoWindowClickListener<MarkerVO> {
 
 
+    private static final String TAG = "MainActivity";
+
+
     public boolean isDustType = true;   // ture:미세먼지정보,  false:초미세먼지정보
 
 
@@ -96,36 +103,58 @@ public class MainActivity extends AppCompatActivity
     private boolean isSettingAlarmMarker = false;
 
 
-    private PrefController pref;
+    private Marker widgetMarker;
+    public static boolean isSettingWidgetMarker = false;
+    public static boolean isEndWidgetMarker = false;
 
+    private PrefController pref;
 
     private Toolbar toolbar;
     private NavigationView navigationView;
     public int actionBarHeight;
     public LinearLayout ll_status;
 
-   // private boolean IS_GPS_USE = false;
 
-//    private long APP_RUN_TIME_MILLIS = 0;
-
+    AdView mAdView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-
+        // 세로 고정
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        if(toolbar != null){
-            toolbar.setTitle("전국 미세먼지 정보");
-            setSupportActionBar(toolbar);
 
+
+
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            toolbar.setTitle("");
+            setSupportActionBar(toolbar);
         }
 
 
+        Intent widgetIntent = getIntent();
+        String s = widgetIntent.getAction();
+        Log.d("MainActivity", "onCreate: call" + "\t" + s);
+        if(MyConst.WIDGET_TO_MAIN_INTENT_ACTION.equals(widgetIntent.getAction())){
+            Intent wIntent = new Intent(this, WidgetSettingActivity.class);
+            startActivity(wIntent);
+        }
 
-        //getSupportActionBar().show();
+        TextView mTitle = (TextView) toolbar.findViewById(R.id.tv_toolbar_title);
+        mTitle.setText("전국 미세먼지 정보");
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        toggle.syncState();
+
+
+
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
 
         TypedValue tv = new TypedValue();
         actionBarHeight = 0;
@@ -138,32 +167,41 @@ public class MainActivity extends AppCompatActivity
         ll_status.setPadding(0, actionBarHeight, 0, 0);
 
 
-        //MobileAds.initialize(getApplicationContext(), "ca-app-pub-3655876992422407~1028933775");
-//        AdView mAdView = (AdView) findViewById(R.id.adView);
-//        AdRequest adRequest = new AdRequest.Builder().build();
-//        mAdView.loadAd(adRequest);
-
-
-        Log.d("MainActivity", "onCreate: call");
-
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        toggle.syncState();
-
-        navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-
         if (isDustType)
             navigationView.getMenu().getItem(0).getSubMenu().getItem(0).setChecked(true);
         else navigationView.getMenu().getItem(0).getSubMenu().getItem(1).setChecked(true);
 
 
-        // firebase FCM
-       /* FirebaseMessaging.getInstance().subscribeToTopic("news");
-        FirebaseInstanceId.getInstance().getToken();*/
+
+        if( !Utils.isConnectNetwork(this) ){
+            Log.e(TAG, "인터넷 사용 불가");
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("알림");
+            builder.setCancelable(true);
+            builder.setMessage("인터넷을 사용할 수 없습니다. 확인 후 다시 이용해주세요.");
+            builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                    finish();
+                }
+            });
+            builder.show();
+        }else{
+
+
+          /*  AdView mAdView = (AdView) findViewById(R.id.adView);
+            AdRequest adRequest = new AdRequest.Builder().addTestDevice("FFA58C3D70AD52031C762233496B51FE").build();
+            mAdView.loadAd(adRequest);*/
+
+
+
+        MobileAds.initialize(getApplicationContext(), "ca-app-pub-3655876992422407/2505666979");
+        mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+
+
 
 
         // Google Map Setting
@@ -191,22 +229,13 @@ public class MainActivity extends AppCompatActivity
         }
 
 
-
-
-       /* for(int i = 0; i < MyConst.testList.size() ; i++){
-
-            String tmp = (String) MyConst.testList.get(i);
-            Address adr = getAddress(tmp);
-            String[] tmp2 = tmp.split(" ");
-            Log.d("getLatLng",  "put(\""+ tmp2[0] + tmp2[1] + "\"," + "new MarkerVO(\"" + tmp2[0] + "\",\"" + tmp2[1] + "\",new LatLng(  " + adr.getLatitude() + "," + adr.getLongitude() + ")) );" );
-
-        }*/
+        } // end of Network check
 
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        Log.d("  MainActivity", "onMapReady: call");
+        Log.d("MainActivity", "onMapReady: call");
 
         mMap = googleMap;
         mMap.setPadding(0, actionBarHeight + 30, 0, 0);
@@ -218,7 +247,7 @@ public class MainActivity extends AppCompatActivity
         mMap.setMaxZoomPreference(DEFAULT_MIN_ZOOM_LEVEL);
 
         // Map 내 불필요한 아이콘 제거
-       mMap.getUiSettings().setRotateGesturesEnabled(false);
+        mMap.getUiSettings().setRotateGesturesEnabled(false);
         mMap.getUiSettings().setCompassEnabled(false);
         mMap.getUiSettings().setMapToolbarEnabled(false);
 
@@ -259,17 +288,6 @@ public class MainActivity extends AppCompatActivity
         mClusterManager.cluster();
 
 
-        /*if (android.os.Build.VERSION.SDK_INT >= M) {
-            //User has previously accepted this permission
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                setMyLocationEnabled(true);
-                Log.d("checkLocationPermission", "onMapReady");
-            }
-        } else {
-            //Not in api-23, no need to prompt
-            setMyLocationEnabled(true);
-        }*/
-
         // Google Map current My location Perminssion check
         if (android.os.Build.VERSION.SDK_INT >= M) {
             Log.d("PermissionsResult", "oncreate");
@@ -280,7 +298,7 @@ public class MainActivity extends AppCompatActivity
         LatLng l = moveCameraPostion();
 
         //가장 가까운 지역 정보 토스트
-        showNearLocationInfoToast(l.latitude, l.longitude);
+        //showNearLocationInfoToast(l.latitude, l.longitude);
 
 
         mMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
@@ -288,8 +306,7 @@ public class MainActivity extends AppCompatActivity
             public boolean onMyLocationButtonClick() {
                 Log.d("onMyLocationButtonClick", "call");
                 LatLng l = moveCameraPostion();
-                //가장 가까운 지역 정보 토스트
-                showNearLocationInfoToast(l.latitude, l.longitude);
+                //showNearLocationInfoToast(l.latitude, l.longitude);
                 return true;
             }
         });
@@ -302,43 +319,44 @@ public class MainActivity extends AppCompatActivity
     protected void onRestart() {
         super.onRestart();
         Log.d("onRestart", "onRestart");
-
         checkIntentData();
 
     }
 
 
     private void addItems() {
-        DataController dc = new DataController();
-        dc.getData();
 
-        Iterator<String> keys = MyConst.markerMap.keySet().iterator();
-        Log.e("MyConst.markerMap", "total count : " + MyConst.markerMap.size());
-        int errCnt = 0, norCnt = 0;
-        while (keys.hasNext()) {
-            String key = keys.next();
-            MarkerVO vo = MyConst.markerMap.get(key);
-            if (vo.getPm10Value() == null || vo.getPm10Value().equals("")) {
-                errCnt++;
-                Log.e("MyConst.markerMap", key + " : " + vo.getPm10Value());
-            } else {
-                mClusterManager.addItem(vo);
-                norCnt++;
+            DataController dc = new DataController();
+            dc.getSidoData();
+            dc.getForecastData();
+
+            Iterator<String> keys = MyConst.markerMap.keySet().iterator();
+            Log.e("MyConst.markerMap", "total count : " + MyConst.markerMap.size());
+            int errCnt = 0, norCnt = 0;
+            while (keys.hasNext()) {
+                String key = keys.next();
+                MarkerVO vo = MyConst.markerMap.get(key);
+                if (vo.getPm10Value() == null || vo.getPm10Value().equals("")) {
+                    errCnt++;
+                    Log.e("MyConst.markerMap", key + " : " + vo.getPm10Value());
+                } else {
+                    mClusterManager.addItem(vo);
+                    norCnt++;
+                }
             }
-        }
-        Log.e("MyConst.markerMap", "null or empty count : " + errCnt);
-        Log.e("MyConst.markerMap", "mClusterManager size : " + norCnt);
-        MyConst.CURRENT_DATA_DATE = (String) (MyConst.markerMap.get("서울강남구").getDataTime());
-        MyConst.CURRENT_MARKER_NUMBER = norCnt;
+            Log.e("MyConst.markerMap", "null or empty count : " + errCnt);
+            Log.e("MyConst.markerMap", "mClusterManager size : " + norCnt);
+            MyConst.CURRENT_DATA_DATE = (String) (MyConst.markerMap.get("서울강남구").getDataTime());
+            MyConst.CURRENT_MARKER_NUMBER = norCnt;
 
     }
 
 
     // show near location info toast
-    public void showNearLocationInfoToast(double lat, double lng) {
+   /* public void showNearLocationInfoToast(double lat, double lng) {
         String msg = Utils.getNearDistanceInfo(lat, lng);
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-    }
+    }*/
 
 
     /*
@@ -368,6 +386,10 @@ public class MainActivity extends AppCompatActivity
                     stopAlarmMarekrInMap();
                 }
 
+                if(isSettingWidgetMarker){
+                    stopWidgetLocationInMap();
+                }
+
 
                 Address addr = getAddress(s);
                 if (addr != null) {
@@ -383,7 +405,6 @@ public class MainActivity extends AppCompatActivity
 
                 searchView.setIconified(true);
                 searchView.clearFocus();        // hide keyboard
-
                 // collapse the action view
                 if (menu != null) {
                     (menu.findItem(R.id.action_settings)).collapseActionView();
@@ -402,6 +423,11 @@ public class MainActivity extends AppCompatActivity
                 if (isSettingAlarmMarker) {
                     stopAlarmMarekrInMap();
                 }
+
+                if(isSettingWidgetMarker){
+                    stopWidgetLocationInMap();
+                }
+
 
 
                 return false;
@@ -454,6 +480,10 @@ public class MainActivity extends AppCompatActivity
                 stopAlarmMarekrInMap();
             }
 
+            if(isSettingWidgetMarker){
+                stopWidgetLocationInMap();
+            }
+
 
             MyConst.intentVO.setInitData();
             Intent i = new Intent(this, AlarmListActivity.class);
@@ -464,6 +494,11 @@ public class MainActivity extends AppCompatActivity
             if (isSettingAlarmMarker) {
                 stopAlarmMarekrInMap();
             }
+
+            if(isSettingWidgetMarker){
+                stopWidgetLocationInMap();
+            }
+
 
             if (isSettingInitMarker == false) {
                 isSettingInitMarker = true;
@@ -500,6 +535,9 @@ public class MainActivity extends AppCompatActivity
                 stopAlarmMarekrInMap();
             }
 
+            if(isSettingWidgetMarker){
+                stopWidgetLocationInMap();
+            }
 
             String msg = "전국 " + MyConst.CURRENT_MARKER_NUMBER + "개 시군구\n미세먼지, 초미세먼지 정보\n";
             msg += "기준 : " + MyConst.CURRENT_DATA_DATE + "\n";
@@ -527,10 +565,15 @@ public class MainActivity extends AppCompatActivity
                 stopInitLocationInMap();
             }
 
+            if(isSettingWidgetMarker){
+                stopWidgetLocationInMap();
+            }
+
+
             if (id == R.id.mn_dust) {
                 if (isDustType == false) {
                     isDustType = true;
-                    toolbar.setTitle("전국 미세먼지 정보");
+                    //toolbar.setTitle("전국 미세먼지 정보");
                     showToast("전국 미세먼지 정보입니다.");
 
                     updateClusterManager();
@@ -545,7 +588,7 @@ public class MainActivity extends AppCompatActivity
             } else if (id == R.id.mn_su_dust) {
                 if (isDustType == true) {
                     isDustType = false;
-                    toolbar.setTitle("전국 초미세먼지 정보");
+                    //toolbar.setTitle("전국 초미세먼지 정보");
                     showToast("전국 초미세먼지 정보입니다.");
                     updateClusterManager();
                     changeTextViewStatus();
@@ -565,82 +608,24 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void updateClusterManager() {
-
-       /* mMap.clear();
-        mClusterManager.clearItems();
-        mClusterManager.cluster();*/
-
-
         mClusterManager.setRenderer(new MarkerVORenderer());
         mClusterManager.cluster();
-
-        //moveCameraPostion();
-
-     /*   LatLng defaultLatLng = new LatLng(pref.DEFAULT_LAT, pref.DEFAULT_LNG);
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(defaultLatLng));
-        CameraUpdate zoom = CameraUpdateFactory.zoomTo((float) 5.5);
-        mMap.animateCamera(zoom);*/
-
-
-
-        /*double zoomLevel = 0;
-        if( mMap.getCameraPosition().zoom + 2 >= DEFAULT_MIN_ZOOM_LEVEL){
-            zoomLevel = mMap.getCameraPosition().zoom - 2;
-        }else{
-            zoomLevel = mMap.getCameraPosition().zoom + 2;
-        }
-        CameraUpdate zoom = CameraUpdateFactory.zoomTo( (float) zoomLevel);
-        mMap.animateCamera(zoom);*/
     }
 
 
-/*
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.d("onActivityResult", "MAIN " + requestCode + " " +  resultCode);
-
-        //0 3
-        //1 4
-        if ((requestCode == MyConst.I_MAIN_TO_LIST_REQ_CODE && resultCode == MyConst.I_LIST_TO_MAIN_RES_CODE) ||
-                (requestCode == MyConst.I_MAIN_TO_ALARM_REQ_CODE && resultCode == MyConst.I_ALARM_TO_MAIN_RES_CODE) ||
-                (requestCode == MyConst.I_MAIN_TO_ALARM_REQ_CODE && resultCode == MyConst.I_MAIN_TO_LIST_REQ_CODE)) {
-            {
-                if (data != null) {
-                    if ("Y".equals(data.getStringExtra(MyConst.ALARM_IS_SET_LOCATION_TAG))) {
-                        setAlarmMarkerInMap();
-                    }
-                }
-
-            }
-        }
-    }
-*/
-
-
-
-
-    /*public void checkAlarmIntentData(){
-        Intent intent = getIntent();
-        String isSetAlarmLocation = intent.getStringExtra(MyConst.ALARM_IS_SET_LOCATION_TAG);
-        if("Y".equals(isSetAlarmLocation)){
-            setAlarmMarkerInMap();
-        }
-    }*/
 
     @Override
     public void onInfoWindowClick(Marker marker) {
 
-//        if (marker.equals(initMarker)) {
-//
-//            Toast.makeText(MainActivity.this, "initMarker 여기서 뭐하지...", Toast.LENGTH_SHORT).show();
-//
-//        } else if (marker.equals(alarmMarker)) {
-//
-//            Toast.makeText(MainActivity.this, "alarmMarker 여기서 뭐하지...", Toast.LENGTH_SHORT).show();
-//
-//        }
+        /*if (marker.equals(initMarker)) {
+
+            Toast.makeText(MainActivity.this, "initMarker 여기서 뭐하지...", Toast.LENGTH_SHORT).show();
+
+        } else if (marker.equals(alarmMarker)) {
+
+            Toast.makeText(MainActivity.this, "alarmMarker 여기서 뭐하지...", Toast.LENGTH_SHORT).show();
+
+        }*/
 
     }
 
@@ -662,6 +647,26 @@ public class MainActivity extends AppCompatActivity
 
         if (checkLocationPermission()) {
             popAlarmMarkerDialog(location.latitude, location.longitude);
+        }
+
+    }
+
+    public void setWidgetMarkerInMap() {
+
+        LatLng location = moveCameraPostion();
+        MarkerOptions marker = new MarkerOptions();
+        marker.position(location)
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ico_map_marker1))
+                .title("위젯으로 설정할 지역을 선택합니다.")
+                .snippet("마커를 롱클릭 후 드래그하여 이동해주세요.")
+                .draggable(true);
+
+        widgetMarker = mMap.addMarker(marker);
+        widgetMarker.showInfoWindow();
+
+
+        if (checkLocationPermission()) {
+            popWidgetMarkerDialog(location.latitude, location.longitude);
         }
 
     }
@@ -710,6 +715,11 @@ public class MainActivity extends AppCompatActivity
         isSettingAlarmMarker = false;
         getAlarmMarker().remove();
     }
+    public void stopWidgetLocationInMap() {
+        isSettingWidgetMarker = false;
+        widgetMarker.remove();
+    }
+
 
     @Override
     public void onMarkerDragEnd(Marker marker) {
@@ -726,6 +736,8 @@ public class MainActivity extends AppCompatActivity
             popInitMarkerDialog(dragLat, dragLong, zoom);
         } else if (marker.equals(alarmMarker) && isSettingAlarmMarker == true) {
             popAlarmMarkerDialog(dragLat, dragLong);
+        } else if (marker.equals(widgetMarker) && isSettingWidgetMarker == true) {
+            popWidgetMarkerDialog(dragLat, dragLong);
         }
 
 
@@ -798,24 +810,44 @@ public class MainActivity extends AppCompatActivity
         builder.show();
     }
 
+    public void popWidgetMarkerDialog(final Double lat, final Double lng) {
+
+        final String location = getNearDistanceLocation(lat, lng);
+        Log.d("popWidgetMarkerDialog", location + "\t\t ....");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("위젯 지역 설정");
+        builder.setCancelable(true);
+        builder.setMessage("마커에서 가장 가까운 측정지\n" + location + " 입니다. 위젯 설정하시겠습니까?");
+        builder.setPositiveButton("네", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                stopWidgetLocationInMap();
+
+                Intent i = new Intent(getApplicationContext(), WidgetSettingActivity.class);
+                i.putExtra("LOCATION", location);
+                startActivity(i);
+            }
+        });
+        builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        builder.show();
+    }
 
     /*
     *   Pref
     * */
     public LatLng moveCameraPostion() {
-        int i = 0;
-        Log.d("checkLocationPermission", ++i + "번째");
+        Log.d("checkLocationPermission", "call " );
         LatLng userLocation = null;
 
         if (checkLocationPermission() == true) {
 
-            //Toast.makeText(this, "현재 위치에서 가장 가까운 측정지로 이동합니다.", Toast.LENGTH_SHORT).show();
-
-
             LocationManager lm = (LocationManager) getSystemService(this.LOCATION_SERVICE);
             Location myLocation = lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
-
-            //
             //Location myLocation = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
             if (myLocation == null) {
@@ -829,8 +861,11 @@ public class MainActivity extends AppCompatActivity
 
             if (myLocation != null) {
                 LatLng l = Utils.getNearDistanceLatLng(myLocation.getLatitude(), myLocation.getLongitude());
-                userLocation = new LatLng(l.latitude, l.longitude);
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, DEFAULT_MYLOCATION_ZOOM_LEVEL), null);
+                if(l != null){
+                    userLocation = new LatLng(l.latitude, l.longitude);
+                    //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, DEFAULT_MYLOCATION_ZOOM_LEVEL), null);
+                    mMap.moveCamera( CameraUpdateFactory.newLatLngZoom(userLocation, DEFAULT_MYLOCATION_ZOOM_LEVEL) );
+                }
             } else {
                 showToast("현재 위치를 가져올 수 없습니다. \nGPS를 활성화 해주세요.\nGPS가 켜져있다면, 다시 실행해주세요.");
             }
@@ -840,9 +875,10 @@ public class MainActivity extends AppCompatActivity
 
         if (userLocation == null) {
             userLocation = new LatLng(pref.getPrefInitMarkerLat(), pref.getPrefInitMarkerLng());
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
+            /*mMap.moveCamera(CameraUpdateFactory.newLatLng(userLocation));
             CameraUpdate zoom = CameraUpdateFactory.zoomTo((int) pref.getPrefInitMarkerZoom());
-            mMap.animateCamera(zoom);
+            mMap.animateCamera(zoom);*/
+            mMap.moveCamera( CameraUpdateFactory.newLatLngZoom(userLocation, (int) pref.getPrefInitMarkerZoom()) );
 
         }
 
@@ -863,6 +899,19 @@ public class MainActivity extends AppCompatActivity
             setAlarmMarkerInMap();
         }
         MyConst.intentVO.setAlarmMarker(false);
+
+
+        if(isSettingWidgetMarker){
+            setWidgetMarkerInMap();
+        }
+
+        if(isEndWidgetMarker){
+            isEndWidgetMarker = false;
+            this.finish();
+        }
+
+
+
     }
 
 
@@ -953,7 +1002,7 @@ public class MainActivity extends AppCompatActivity
 
             String val = isDustType == true ? vo.getPm10Value() : vo.getPm25Value();
             if (val != null && !"".equals(val)) {
-                mIconGenerator.setColor(getMarkerColor(Integer.parseInt(val)));
+                mIconGenerator.setColor(getPm10MarkerColor(getApplicationContext(), Integer.parseInt(val)));
                 mIconGenerator.setTextAppearance(R.style.iconGenTextSingle);
             }
 
@@ -1003,7 +1052,7 @@ public class MainActivity extends AppCompatActivity
                 avg = sum / cnt;
             }
 
-            mClusterIconGenerator.setColor(getMarkerColor((int) Math.round(avg)));
+            mClusterIconGenerator.setColor(Utils.getPm10MarkerColor(getApplicationContext(), (int) Math.round(avg)));
             mClusterIconGenerator.setTextAppearance(R.style.iconGenTextCluster);
             Bitmap icon = mClusterIconGenerator.makeIcon((int) Math.round(avg) + "");
             markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
@@ -1019,20 +1068,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    public int getMarkerColor(int val) {
-        if (val >= 0 && val <= 30) {
-            //return this.getColor(R.color.color_dust_2);
-            return ContextCompat.getColor(this, R.color.color_dust_1);
-        } else if (val >= 31 && val <= 80) {
-            return ContextCompat.getColor(this, R.color.color_dust_2);
-        } else if (val >= 81 && val <= 150) {
-            return ContextCompat.getColor(this, R.color.color_dust_3);
-        } else if (val >= 151) {
-            return ContextCompat.getColor(this, R.color.color_dust_4);
-        } else {
-            return Color.WHITE;
-        }
-    }
 
 
     @Override
@@ -1044,11 +1079,27 @@ public class MainActivity extends AppCompatActivity
     public boolean onClusterItemClick(MarkerVO item) {
         Log.d("onClusterItemClick", item.getSidoName() + "," + item.getCityName());
 
-        String str = item.getSidoName() + " " + item.getCityName() + " 상세정보\n";
+        Intent detailIntent = new Intent(this, DetailActivity.class);
+        detailIntent.putExtra(MyConst.DATE_TIME_DETAIL_INTENT_TAG, item.getDataTime());
+        detailIntent.putExtra(MyConst.SIDO_DETAIL_INTENT_TAG, item.getSidoName());
+        detailIntent.putExtra(MyConst.CITY_DETAIL_INTENT_TAG, item.getCityName());
+        detailIntent.putExtra(MyConst.PM10_DETAIL_INTENT_TAG, item.getPm10Value());
+        detailIntent.putExtra(MyConst.PM25_DETAIL_INTENT_TAG, item.getPm25Value());
+        detailIntent.putExtra(MyConst.TODAY_VAL_DETAIL_INTENT_TAG, MyConst.PM10_FORECAST_SIDO_MAP.get(item.getSidoName()));
+        detailIntent.putExtra(MyConst.TODAY_FORE_DETAIL_INTENT_TAG, MyConst.TODAY_FORECAST_VO.getInformCause());
+        detailIntent.putExtra(MyConst.TOMW_FORE_DETAIL_INTENT_TAG, MyConst.TOMORROW_FORECAST_VO.getInformOverall());
+        startActivity(detailIntent);
+
+     /*   String str = item.getSidoName() + " " + item.getCityName() + " 상세정보\n";
         str += "미세먼지 : " + item.getPm10Value() + "(" + Utils.getPm10ValueStatus(item.getPm10Value()) + ")\n";
         str += "초미세먼지 : " + item.getPm25Value() + "(" + Utils.getPm25ValueStatus(item.getPm25Value()) + ")\n";
         str += "기준 : " + item.getDataTime();
+        str += MyConst.TODAY_FORECAST_VO.getDataTime() + "기준 미세먼지 예보";
+        str += item.getSidoName() + ":"+ MyConst.PM10_FORECAST_SIDO_MAP.get(item.getSidoName());
+        str += "\n오늘 : " + MyConst.TODAY_FORECAST_VO.getInformCause();
+        str += "내일 : " +MyConst.TOMORROW_FORECAST_VO.getInformOverall();
         Toast.makeText(getBaseContext(), str, Toast.LENGTH_SHORT).show();
+        */
 
         return false;
     }
@@ -1262,11 +1313,6 @@ public class MainActivity extends AppCompatActivity
     public void showToast(String msg){
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
-
-
-
-
-
 
 
 }

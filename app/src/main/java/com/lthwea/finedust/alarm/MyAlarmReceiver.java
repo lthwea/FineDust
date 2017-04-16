@@ -9,6 +9,7 @@ import android.util.Log;
 import com.lthwea.finedust.cnst.MyConst;
 import com.lthwea.finedust.controller.DataController;
 import com.lthwea.finedust.util.Utils;
+import com.lthwea.finedust.view.DetailActivity;
 
 import java.util.Calendar;
 
@@ -28,26 +29,47 @@ public class MyAlarmReceiver extends BroadcastReceiver {
 
         int todayIndex = getTodayIndex();
         if (days[todayIndex] == true){
-
-            DataController dc = new DataController();
-            String value = dc.getAlarmData(sidoName, cityName);      // p1 시, p2 시도
-
-
+            String sidoInfo = "";
             String msg = "";
-            if(!"".equals(value)){
-                String[] values = value.split(",");         //1 pm10, 2 pm25, 3 date time
-                msg = sidoName + " " + cityName + " 상세정보\n";
-                msg += "미세먼지 : " + values[0] +  "("+ Utils.getPm10ValueStatus(values[0]) + ")\n";
-                msg +=  "초미세먼지 : " +values[1]+  "("+ Utils.getPm25ValueStatus(values[1]) + ")\n";
-                msg += "기준 : " + values[2];
+
+            if( Utils.isConnectNetwork(context)){
+
+
+                DataController dc = new DataController();
+                sidoInfo = dc.getSidoAlarmData(sidoName, cityName);      // p1 시, p2 시도
+
+
+                if(!"".equals(sidoInfo)){
+                    String[] values = sidoInfo.split(",");         //1 pm10, 2 pm25, 3 date time
+                    dc.getForecastData();
+
+                    Intent detailIntent = new Intent(context, DetailActivity.class);
+                    detailIntent.putExtra("isAlarm", true);
+                    detailIntent.putExtra(MyConst.DATE_TIME_DETAIL_INTENT_TAG, values[2]);
+                    detailIntent.putExtra(MyConst.SIDO_DETAIL_INTENT_TAG, sidoName);
+                    detailIntent.putExtra(MyConst.CITY_DETAIL_INTENT_TAG, cityName);
+                    detailIntent.putExtra(MyConst.PM10_DETAIL_INTENT_TAG, values[0]);
+                    detailIntent.putExtra(MyConst.PM25_DETAIL_INTENT_TAG, values[1]);
+                    detailIntent.putExtra(MyConst.TODAY_VAL_DETAIL_INTENT_TAG, MyConst.PM10_FORECAST_SIDO_MAP.get(sidoName));
+                    detailIntent.putExtra(MyConst.TODAY_FORE_DETAIL_INTENT_TAG, MyConst.TODAY_FORECAST_VO.getInformCause());
+                    detailIntent.putExtra(MyConst.TOMW_FORE_DETAIL_INTENT_TAG, MyConst.TOMORROW_FORECAST_VO.getInformOverall());
+                    context.startActivity(detailIntent);
+
+                }else{
+                    //msg = "죄송합니다. 서버 연결이 원할하지 않아 데이터를 불러 올 수 없습니다.";
+                    Log.e("FineDustAlarm", "죄송합니다. 서버 연결이 원할하지 않아 데이터를 불러 올 수 없습니다.");
+                    return;
+                }
+
+
+
             }else{
-                msg = "죄송합니다. 서버 연결이 원할하지 않아 데이터를 불러 올 수 없습니다.";
+                //Utils.showPositiveAlertDialog(context, "알림", "인터넷을 사용할 수 없습니다. 확인 후 다시 이용해주세요.");
+                //msg = "인터넷이 연결되지 않아 미세먼지 실시간 정보를 받아올 수 없습니다.";
+                Log.e("FineDustAlarm", "인터넷이 연결되지 않아 미세먼지 실시간 정보를 받아올 수 없습니다.");
+                return;
             }
-            
-            Intent clockIntent = new Intent(context, MyAlarmActivity.class);
-            clockIntent.putExtra("msg", msg);
-            clockIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(clockIntent);
+
 
         }else{
 
